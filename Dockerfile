@@ -6,5 +6,5 @@ WORKDIR /best_rt
 COPY . .
 RUN make
 
-# Define the command to run when the container starts
+# run the executable without arguments, or with the path to a scene file as argument e.g."scenes/snowman.rt"
 CMD ["./miniRT", "scenes/snowman.rt"]
