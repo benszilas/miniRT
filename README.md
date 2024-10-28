@@ -1,5 +1,5 @@
 This minimalistic raytracing engine is a 42 school project which is still ongoing.
-It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux) made for 42 students.
+It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux) made for 42 students. All code except the directory minilibx-linux is our work.
 Big thanks to my teammate [vman101](https://github.com/vman101) for implementing many fantastic creative ideas that go way beyond the scope of what is required by the school.
 We are still working on this fun raytracing engine so there is more to come!
 
