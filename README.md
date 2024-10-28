@@ -43,15 +43,22 @@ or with the path to a specific scene file as argument
 # Navigation:
 
 change resolution (for faster movement): numpad - or numpad +
+
 select object: right click
+
 move camera or object: WASDQE
+
 rotate camera or object: arrow keys
+
 undo object selection: left click on empty space
+
 change fov: mouse wheel
+
 move object: lmb + drag
+
 add object: click menu item
 
-# Requirements of this school project:
+# School requirements:
 
 Allowed functions
 • open, close, read, write,
