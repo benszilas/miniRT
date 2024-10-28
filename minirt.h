@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:34:08 by victor            #+#    #+#             */
-/*   Updated: 2024/10/28 14:27:55 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/28 17:27:59 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,8 +40,8 @@
 # define MAX_BODY_INIT 16
 # define READ_BUFFER_SIZE 2048
 
-# define SCENE_START_RESOLUTION_X 5
-# define SCENE_START_RESOLUTION_Y 5
+# define SCENE_START_RESOLUTION_X 1
+# define SCENE_START_RESOLUTION_Y 1
 
 # define CHECKER_GRID_SIZE 16
 

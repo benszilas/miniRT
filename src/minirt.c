@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:33:29 by victor            #+#    #+#             */
-/*   Updated: 2024/10/28 13:53:02 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/28 17:36:00 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,7 @@ int	main(int argc, char **argv)
 	char	*path;
 
 	if (argc == 1)
-		path = "./untitled.rt";
+		path = "scenes/snowman.rt";
 	else if (argc == 2 && ft_strlen(argv[1]) > 3 \
 			&& ft_strncmp(&argv[1][ft_strlen(argv[1]) - 3], ".rt\0", 4) == 0)
 		path = argv[1];

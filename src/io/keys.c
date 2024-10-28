@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:56:44 by victor            #+#    #+#             */
-/*   Updated: 2024/10/21 19:07:54 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/28 17:53:18 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ bool	key_move_light(int keycode, t_scene *scene)
 
 uint	key_change_res(int keycode, t_scene *scene)
 {
-	if (keycode == XK_equal)
+	if (keycode == XK_KP_Subtract)
 	{
 		if (scene->resolution_x == 1)
 			scene->resolution_x = 0;
@@ -40,7 +40,7 @@ uint	key_change_res(int keycode, t_scene *scene)
 		scene->resolution_x += WI / 100;
 		scene->resolution_y += HI / 100;
 	}
-	else if (keycode == XK_minus)
+	else if (keycode == XK_KP_Add)
 	{
 		if ((int)(scene->resolution_x - WI / 100) <= 0 \
 			|| (int)(scene->resolution_y - HI / 100 <= 0))
