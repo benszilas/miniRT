@@ -6,12 +6,11 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:33:29 by victor            #+#    #+#             */
-/*   Updated: 2024/10/27 11:45:13 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/28 13:53:02 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minirt.h"
-#include <mlx.h>
 
 int	close_window(void *data_ptr)
 {

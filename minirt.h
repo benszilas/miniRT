@@ -6,15 +6,15 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:34:08 by victor            #+#    #+#             */
-/*   Updated: 2024/10/26 09:19:33 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/28 14:27:55 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINIRT_H
 # define MINIRT_H
 
-# include <mlx.h> 
-# include "mlx_int.h"
+# include "minilibx-linux/mlx.h"
+# include "minilibx-linux/mlx_int.h"
 # include <unistd.h>
 # include <math.h>
 # include <stdlib.h>
@@ -40,8 +40,8 @@
 # define MAX_BODY_INIT 16
 # define READ_BUFFER_SIZE 2048
 
-# define SCENE_START_RESOLUTION_X WI / 100
-# define SCENE_START_RESOLUTION_Y HI / 100
+# define SCENE_START_RESOLUTION_X 5
+# define SCENE_START_RESOLUTION_Y 5
 
 # define CHECKER_GRID_SIZE 16
 

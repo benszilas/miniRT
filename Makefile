@@ -6,7 +6,7 @@
 #    By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/08 16:30:33 by victor            #+#    #+#              #
-#    Updated: 2024/10/27 13:29:57 by bszilas          ###   ########.fr        #
+#    Updated: 2024/10/28 14:57:17 by bszilas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ CC := cc
 
 CFLAGS := -Wall -Wextra -g3
 
-LDFLAGS := -lmlx -lm -lXext -lX11
+LDFLAGS := -lm -lXext -lX11
 
 NAME := miniRT
 
@@ -45,7 +45,7 @@ SRCUTIL :=	$(UTILDIR)/ft_atod.c \
 		  	$(UTILDIR)/vector.c $(UTILDIR)/detect_overflow_utils.c \
 		 	$(UTILDIR)/detect_overflow.c
 
-LIBS := libft/libft.a memory/memory.a
+LIBS := libft/libft.a memory/memory.a minilibx-linux/libmlx.a
 
 OBJDIR := obj
 OBJ := $(SRC:%.c=$(OBJDIR)/%.o)
@@ -57,6 +57,7 @@ OBJUTIL := $(SRCUTIL:%.c=$(OBJDIR)/%.o)
 all: $(OBJDIR) $(NAME)
 
 $(NAME): $(OBJ) $(LIBS) minirt.h $(OBJIO) $(OBJSCENE) $(OBJUTIL) $(OBJRENDER)
+	make -C minilibx-linux
 	$(CC) $(CFLAGS) -o $@ $(OBJ) $(OBJIO) $(OBJSCENE) $(OBJUTIL) $(OBJRENDER) $(LIBS) $(LDFLAGS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/$(SCENEDIR)/%.c minirt.h
