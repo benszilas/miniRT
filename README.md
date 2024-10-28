@@ -3,13 +3,15 @@ It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux) made f
 Big thanks to my teammate [vman101](https://github.com/vman101) for implementing many fantastic creative ideas that go way beyond the scope of what is required by the school.
 We are still working on this fun raytracing engine so there is more to come!
 
-# Run in Docker:
+# Run using Docker:
 
 ```bash
+git clone git@github.com:Fapad/miniRT.git
+cd miniRT
 docker build -t minirt .
 docker run --rm -e DISPLAY="$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix minirt
 ```
-you might need to enable X11 forwarding for local non-network users for docker run to work
+you might need to enable X11 forwarding for local non-network users to run the container
 
 ```bash
 xhost + local:
