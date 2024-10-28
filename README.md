@@ -35,7 +35,7 @@ either without arguments,
 ```bash
 ./miniRT
 ```
-or with the path to a specific scene file as argument e.g."scenes/snowman.rt"
+or with the path to a specific scene file as argument
 ```bash
 ./miniRT scenes/eclipse.rt
 ```
