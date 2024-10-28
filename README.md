@@ -9,7 +9,7 @@ We are still working on this fun raytracing engine so there is more to come!
 docker build -t minirt .
 docker run --rm -e DISPLAY="$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix minirt
 ```
-you might need to enable X11 forwarding for local non-network users for it to work
+you might need to enable X11 forwarding for local non-network users for docker run to work
 
 ```bash
 xhost + local:
@@ -30,20 +30,26 @@ cd miniRT
 make
 ```
 
-## 3. run the executable without arguments, or with the path to a scene file as argument e.g."scenes/snowman.rt"
+## 3. run the executable 
+either without arguments,
 ```bash
-./miniRT scenes/snowman.rt
+./miniRT
+```
+or with the path to a specific scene file as argument e.g."scenes/snowman.rt"
+```bash
+./miniRT scenes/eclipse.rt
 ```
 
 # Navigation:
 
 change resolution (for faster movement): numpad - or numpad +
 select object: right click
-undo selection: left click on empty space
 move camera or object: WASDQE
 rotate camera or object: arrow keys
+undo object selection: left click on empty space
 change fov: mouse wheel
 move object: lmb + drag
+add object: click menu item
 
 # Requirements of this school project:
 
