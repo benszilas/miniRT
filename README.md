@@ -13,7 +13,7 @@ cd miniRT
 docker build -t minirt .
 docker run --rm -e DISPLAY="$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix minirt
 ```
-If you get the error "Authorization required, but no authorization protocol specified", you might need to enable X11 forwarding for local non-network users to run the container
+If you get the error "Authorization required, but no authorization protocol specified", you might need to enable X11 forwarding locally
 
 ```bash
 xhost + local:
