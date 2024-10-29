@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 17:52:32 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/29 16:04:37 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/29 19:32:20 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,9 @@ double	sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 	double		t0;
 	double		t1;
 
-	ray_dist = ray_distance_from_point_squared(ray, dlt_centr);
+	ray_dist = dot_product(dlt_centr, ray);
+	ray_dist = (dot_product(dlt_centr, dlt_centr) + SHADOW_BIAS) \
+			- ray_dist * ray_dist;
 	if (ray_dist > sphere.radius * sphere.radius)
 		return (-1);
 	ray_dist = sqrt(ray_dist);

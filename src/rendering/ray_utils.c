@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 18:17:12 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/29 16:05:13 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/29 19:26:08 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ double	ray_distance_from_point_squared(t_vector ray, t_vector point)
 	double	projection_len;
 
 	projection_len = dot_product(point, ray);
-	return ((dot_product(point, point) + SHADOW_BIAS) \
+	return ((dot_product(point, point) + 1e-10) \
 			- projection_len * projection_len);
 }
 
