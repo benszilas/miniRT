@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:56:44 by victor            #+#    #+#             */
-/*   Updated: 2024/10/28 17:53:18 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/29 15:54:08 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,8 @@ uint	key_change_res(int keycode, t_scene *scene)
 			scene->resolution_x = 0;
 		if (scene->resolution_y == 1)
 			scene->resolution_y = 0;
+		if (scene->resolution_x >= WI / 25 || scene->resolution_y >= HI / 25)
+			return (0);
 		scene->resolution_x += WI / 100;
 		scene->resolution_y += HI / 100;
 	}
