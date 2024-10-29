@@ -1,6 +1,8 @@
 This minimalistic raytracing engine is a 42 school project which is still ongoing.
-It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux) made for 42 students. All code besides the directory minilibx-linux is our work.
+It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux) made for 42 students.
+All code besides the directory minilibx-linux is our work.
 Big thanks to my teammate [vman101](https://github.com/vman101) for implementing many fantastic creative ideas that go way beyond the scope of what is required by the school.
+Credits go to him for his libft and his garbage collector in the memory directory.
 We are still working on this fun raytracing engine so there is more to come!
 
 # Run using Docker:
