@@ -49,71 +49,23 @@ or with the path to a specific scene file as argument
 
 change resolution (for faster movement): numpad - or numpad +
 
-select object: right click
-
 move camera or object: WASDQE
 
 rotate camera or object: arrow keys
 
-undo object selection: left click on empty space
+select object: right click
 
-change fov: mouse wheel
+change object properties: click on object specific menu item
 
-move object: lmb + drag
+undo object selection: click on empty space
+
+move object on xy axis: lmb + drag
 
 add object: click menu item
 
-# School requirements:
+change fov: mouse wheel
 
-Allowed functions
-• open, close, read, write,
-printf, malloc, free, perror,
-strerror, exit
-• All functions of the math
-library (-lm man man 3 math)
-• All functions of the MinilibX
-
-The constraints are as follows:
-• You must use the miniLibX. Either the version that is available on the operating
-system, or from its sources. If you choose to work with the sources, you will
-need to apply the same rules for your libft as those written above in Common
-Instructions part.
-
-• The management of your window must remain fluid: switching to another window,
-minimization, etc..
-
-• When you change the resolution of the window, the content of the window must
-remain unchanged and be adjusted accordingly.
-
-• You need at least these 3 simple geometric objects: plane, sphere, cylinder.
-
-My first RayTracer with miniLibX
-• If applicable, all possible intersections and the inside of the object must be handled
-correctly.
-
-• Your program must be able to resize the object’s unique properties: diameter for a
-sphere and the width and height for a cylinder.
-
-• Your program must be able to apply translation and rotation transformation to
-objects, lights and cameras (except for spheres and lights that cannot be rotated).
-
-• Light management: spot brightness, hard shadows, ambiance lighting (objects are
-never completely in the dark). You must implement Ambient and diffuse lighting.
-
-the program displays the image in a window and respect the following rules:
-◦ Pressing ESC must close the window and quit the program cleanly.
-
-◦ Clicking on the red cross on the window’s frame must close the window and
-quit the program cleanly.
-
-◦ The use of images of the minilibX is strongly recommended.
-
-# the .rt file format describes a 3d scene
-
-• Your program must take as a first argument a scene description file with the .rt
-extension.
-
-◦ Each type of element can be separated by one or more line break(s).
+# the .rt file describes a 3d scene
 
 ◦ Each type of information from an element can be separated by one or more
 space(s).
@@ -132,7 +84,7 @@ Each element first’s information is the type identifier (composed by one or tw
   ◦ Camera:
 ∗ identifier: C
      ∗ x,y,z coordinates of the view point: -50.0,0,20
-∗ 3d normalized orientation vector. In range [-1,1] for each x,y,z axis:
+∗ orientation vector for each x,y,z axis:
 0.0,0.0,1.0
 ∗ FOV : Horizontal field of view in degrees in range [0,180]: 70
 
@@ -150,12 +102,20 @@ Each element first’s information is the type identifier (composed by one or tw
 ◦ Plane:
 ∗ identifier: pl
 ∗ x,y,z coordinates of a point in the plane: 0.0,0.0,-10.0
-∗ 3d normalized normal vector. In range [-1,1] for each x,y,z axis: 0.0,1.0,0.0 ∗ R,G,B colors in range [0-255]: 0,0,225
+∗ 3d vector perpendicular to the plane. for each x,y,z axis: 0.0,1.0,0.0 ∗ R,G,B colors in range [0-255]: 0,0,225
 
   ◦ Cylinder:
 ∗ identifier: cy
      ∗ x,y,z coordinates of the center of the cylinder: 50.0,0.0,20.6
-∗ 3d normalized vector of axis of cylinder. In range [-1,1] for each x,y,z axis:
+∗ 3D vector x,y,z of axis of cylinder
 ∗ the cylinder diameter: 14.2
 ∗ the cylinder height: 21.42
+∗ R,G,B colors in range [0,255]: 10, 0, 255
+
+Cone:
+∗ identifier: cn
+     ∗ x,y,z coordinates of the vertex of the cone: 50.0,0.0,20.6
+∗ 3D vector x,y,z of axis of cone
+∗ the diameter of the bottom disk of the cone: 14.2
+∗ the cone height: 21.42
 ∗ R,G,B colors in range [0,255]: 10, 0, 255
