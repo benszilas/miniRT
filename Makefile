@@ -14,7 +14,7 @@ CC := cc
 
 CFLAGS := -Wall -Wextra -g3
 
-LDFLAGS := -lm -lXext -lX11
+LDFLAGS := -lm -lXext -lX11 -lpthread
 
 NAME := miniRT
 

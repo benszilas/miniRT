@@ -25,7 +25,7 @@ docker run --rm -e DISPLAY="$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix minirt
 
 ```bash
 sudo apt-get update -y
-sudo apt-get install -y build-essential xorg libx11-dev libxext-dev libbsd-dev
+sudo apt-get install -y build-essential libpthread-stubs0-dev xorg libx11-dev libxext-dev libbsd-dev
 ```
 ## 2. clone the repo and compile
 
