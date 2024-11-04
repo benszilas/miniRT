@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:30 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/21 19:09:38 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/04 10:44:22 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ void	scene_print(t_scene *scene)
 	uint	i;
 
 	i = 0;
-	body_light_print(scene->light);
+	// body_light_print(scene->light);
 	body_light_print(scene->ambient);
 	body_camera_print(scene->camera);
 	while (scene->body[i].type != BODY_END && i < scene->current_body_max)
@@ -131,7 +131,7 @@ void	scene_save_helper(t_scene *scene, char *path)
 
 	i = 0;
 	ft_open(&fd, path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
-	light_save(scene->light, fd);
+	// light_save(scene->light, fd);
 	camera_save(&scene->camera, fd);
 	while (i < scene->body_cursor)
 	{
@@ -184,8 +184,8 @@ bool	body_determine(char *entry, uint line_cursor, t_scene *scene)
 		return (ft_fprintf(STDERR_FILENO, "Empty or Invalid config\n"), false);
 	*tmp++ = 0;
 	success = false;
-	if (ft_strncmp(entry, "L", 2) == 0)
-		success = parse_light(tmp, line_cursor, &scene->light);
+	if (ft_strncmp(entry, "L", 2) == 0 && scene->light_count < 4)
+		success = parse_light(tmp, line_cursor, scene->light + scene->light_count++);
 	else if (ft_strncmp(entry, "C", 2) == 0)
 		success = parse_camera(tmp, line_cursor, &scene->camera);
 	else if (ft_strncmp(entry, "A", 2) == 0)
@@ -226,6 +226,7 @@ void	scene_create(const char *filepath, t_scene *scene)
 	scene->body = ft_calloc(MAX_BODY_INIT, sizeof(*scene->body));
 	lst_memory(scene->body, free, ADD);
 	scene->texture[0] = ppm_image_read("./assets/earth.ppm");
+	scene->texture[1] = ppm_image_read("./assets/sky.ppm");
 	ft_open(&fd, filepath, O_CREAT | O_RDWR, 0644);
 	scene_create_loop(scene, line, fd);
 	ft_close(fd);

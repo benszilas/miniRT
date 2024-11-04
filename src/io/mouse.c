@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/15 00:01:14 by victor            #+#    #+#             */
-/*   Updated: 2024/10/21 16:17:22 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/02 23:30:52 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,11 +57,11 @@ void	mouse_click_right(int x, int y, t_data *data, t_mouse *mouse)
 	t_body	*body;
 
 	id_group = id_group_get(data->pixel[y * WI + x].id);
-	data->scene.focus2 = NULL;
+	data->scene.body_focus = NULL;
 	if (id_group >= ID_GROUP_SPHERE && id_group <= ID_GROUP_CONE)
 	{
 		body = body_get_by_id(data->pixel[y * WI + x].id, &data->scene);
-		data->scene.focus2 = body;
+		data->scene.body_focus = body;
 		if (id_group == ID_GROUP_PLANE)
 			plane_menu_map(&data->menu[ID_GROUP_PLANE], body, &body->color);
 		else if (id_group == ID_GROUP_SPHERE)
@@ -130,7 +130,6 @@ int	mouse_release(int button, int x, int y, t_data *data)
 			(void)x;
 			(void)y;
 			((t_body *)data->mouse.grabbed)->color = data->mouse.color_store;
-			data->scene.focus = &data->scene.camera.position;
 		}
 		data->mouse.grabbed = NULL;
 		rendering_loop(data);

@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 13:42:14 by victor            #+#    #+#             */
-/*   Updated: 2024/10/22 19:28:11 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 19:39:23 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,47 +23,33 @@ void	color_print(uint color, int fd)
 			(color >> 8) & 0xff, color & 0xff);
 }
 
-bool	shadow_hit_distance(t_vector p, t_vector shadow_ray, t_light l, t_scene *scene)
+bool	shadow(t_vector p, t_light l, t_body *body, t_scene *scene)
 {
 	uint	j;
-	t_body	*body;
-	double	shadow_hit;
+	double	shadow;
 	int		misc;
 
 	j = 0;
-	body = scene->body;
-	shadow_hit = -1;
+	shadow = -1;
 	while (body[j].type != BODY_END && j < scene->body_cursor \
-			&& (shadow_hit < 0 || shadow_hit > l.obj_distance + SHADOW_BIAS))
+	&& (shadow < SHADOW_BIAS || shadow > l.obj_distance + SHADOW_BIAS))
 	{
 		if (body[j].type == BODY_SPHERE)
-			shadow_hit = sphere_hit_distance(shadow_ray, vector_subtract(\
+			shadow = sphere_hit_distance(l.ray, vector_subtract(\
 						body[j].sphere.center, p), body[j].sphere, &misc);
 		else if (body[j].type == BODY_PLANE)
-			shadow_hit = plane_hit_distance(body[j].plane, p, shadow_ray, &misc);
+			shadow = plane_hit_distance(body[j].plane, p, l.ray, &misc);
 		else if (body[j].type == BODY_CYLINDER)
-			shadow_hit = cyl_components_shadow(body[j].cylinder, shadow_ray, p);
+			shadow = cyl_components_shadow(body[j].cylinder, l.ray, p);
 		else if (body[j].type == BODY_DISK)
-			shadow_hit = disk_hit_distance(body[j].disk, shadow_ray, p, &misc);
+			shadow = disk_hit_distance(body[j].disk, l.ray, p, &misc);
 		else if (body[j].type == BODY_CONE)
-			shadow_hit = cone_components_shadow(body[j].cone, shadow_ray, p);
+			shadow = cone_components_shadow(body[j].cone, l.ray, p);
 		j++;
 	}
-	if ((shadow_hit < 0 || shadow_hit > l.obj_distance + SHADOW_BIAS))
+	if ((shadow < SHADOW_BIAS || shadow > l.obj_distance + SHADOW_BIAS))
 		return (false);
 	return (true);
-}
-
-t_vector	reflect_vector(t_vector v, t_vector n)
-{
-	t_vector	result;
-	double		dot;
-
-	dot = dot_product(v, n);
-	result.x = v.x - 2 * dot * n.x;
-	result.y = v.y - 2 * dot * n.y;
-	result.z = v.z - 2 * dot * n.z;
-	return (result);
 }
 
 uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
@@ -86,53 +72,44 @@ uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
 void	get_color_reflect(t_vector new_center, t_vector normal, \
 						t_scene *scene, t_pixel *pixel)
 {
-	uint		j;
-	t_body		*body;
-	uint		color;
-	t_vector	ray_reflect;
-	t_vector	campos_store;
-	t_vector	light_direction;
-
-	j = 0;
-	body = scene->body;
-	color = *pixel->color;
-	light_direction = vector_subtract(new_center, scene->light.position);
-	light_direction = vector_subtract(new_center, scene->light.position);
-	normalize_vector(&light_direction);
-	ray_reflect = reflect_vector(light_direction, normal);
-	campos_store = scene->camera.position;
-	scene->camera.position = new_center;
-	while (body[j].type != BODY_END && j < scene->body_cursor)
-	{
-		if (body[j].type == BODY_SPHERE)
-			pixel_sphere_set(pixel, ray_reflect, &body[j], scene);
-		j++;
-	}
-	if (*pixel->color != color)
-		*pixel->color = get_color(color, *pixel->color, 0.7);
-	scene->camera.position = campos_store;
+	/*uint		j;*/
+	/*t_body		*body;*/
+	/*uint		color;*/
+	/*t_vector	ray_reflect;*/
+	/*t_vector	campos_store;*/
+	/*t_vector	light_direction;*/
+	/**/
+	/*j = 0;*/
+	/*body = scene->body;*/
+	/*color = *pixel->color;*/
+	/*light_direction = vector_subtract(new_center, scene->light.position);*/
+	/*light_direction = vector_subtract(new_center, scene->light.position);*/
+	/*normalize_vector(&light_direction);*/
+	/*ray_reflect = reflect_vector(light_direction, normal);*/
+	/*campos_store = scene->camera.position;*/
+	/*scene->camera.position = new_center;*/
+	/*while (body[j].type != BODY_END && j < scene->body_cursor)*/
+	/*{*/
+	/*	if (body[j].type == BODY_SPHERE)*/
+	/*		pixel_sphere_set(pixel, ray_reflect, &body[j], scene);*/
+	/*	j++;*/
+	/*}*/
+	/*if (*pixel->color != color)*/
+	/*	*pixel->color = get_color(color, *pixel->color, 0.7);*/
+	/*scene->camera.position = campos_store;*/
 }
 
-double	get_color_attenuation(t_vector p, t_vector surface_n, \
-								t_light l, t_scene *sc)
+float	dropoff_factor(float distance)
 {
-	t_vector	light_n;
-	double		dropoff_factor;
-	double		attn;
+	return (1 / pow((distance + DROPOFF_DISTANCE) / DROPOFF_DISTANCE, 2));
+}
 
-	p = add_vector(p, scale_vector(surface_n, SHADOW_BIAS));
-	light_n = vector_subtract(l.position, p);
-	l.obj_distance = vector_length(light_n);
-	normalize_vector(&light_n);
-	if (shadow_hit_distance(p, light_n, l, sc))
+uint	phong_reflection(uint obj, float attenuation, t_light l, float gloss)
+{
+	if (attenuation <= 0 || gloss == 0)
 		return (0);
-	attn = dot_product(surface_n, light_n);
-	if (attn < 0)
-		attn = 0;
-	dropoff_factor = (1 / pow((l.obj_distance + DROPOFF_DISTANCE) \
-				/ DROPOFF_DISTANCE, 2));
-	attn *= (l.intensity + sc->ambient.intensity) * dropoff_factor;
-	return (attn);
+	attenuation *= l.intensity * dropoff_factor((1 / gloss) * l.obj_distance);
+	return (get_color(obj, l.color, pow(attenuation, gloss)));
 }
 
 uint	get_color(uint obj, uint light, double attn)

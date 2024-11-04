@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:41:36 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/27 12:35:01 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 19:05:04 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,40 @@ void	define_camera_rays(	t_pixel *pixel, \
 			ray.y = ((1 - 2 * (y + 0.5) / HI) * fov);
 			ray.z = 1;
 			ray_to_world(&ray, camera);
-			ray_check_bodys(&pixel[y * WI + x], ray, scene);
+			/*ray_check_bodys(&pixel[y * WI + x], ray, scene,);*/
+			x += scene->resolution_x;
+		}
+		y += scene->resolution_y;
+	}
+}
+
+void	thread_define_camera_rays(	t_thread *thread, \
+									t_pixel *pixel, \
+									t_scene *scene, \
+									t_camera *camera)
+{
+	double		aspect_ratio;
+	uint		x;
+	uint		y;
+	double		fov;
+	t_vector	ray;
+
+	y = thread->starty;
+	aspect_ratio = (double)WI / (double)HI;
+	fov = tan(camera->fov / 2 * M_PI / 180);
+	set_world_matrix(camera);
+	while (y < thread->starty + THREAD_HEIGHT)
+	{
+		x = 0;
+		while (x < WI)
+		{
+			ray.x = ((2 * (x + 0.5) / WI - 1) * fov * aspect_ratio);
+			ray.y = ((1 - 2 * (y + 0.5) / HI) * fov);
+			ray.z = 1;
+			pixels_clear(&pixel[y * WI + x], scene->resolution_x, scene->resolution_y);
+			ray_to_world(&ray, camera);
+			thread->scene.depth = 0;
+			ray_check_bodys(&pixel[y * WI + x], ray, &thread->scene);
 			x += scene->resolution_x;
 		}
 		y += scene->resolution_y;

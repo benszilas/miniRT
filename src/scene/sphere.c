@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 17:52:32 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/29 19:32:20 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 21:47:46 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ double	sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 
 	ray_dist = dot_product(dlt_centr, ray);
 	ray_dist = (dot_product(dlt_centr, dlt_centr) + SHADOW_BIAS) \
-			- ray_dist * ray_dist;
+		- ray_dist * ray_dist;
 	if (ray_dist > sphere.radius * sphere.radius)
 		return (-1);
 	ray_dist = sqrt(ray_dist);
@@ -119,7 +119,7 @@ void	get_color_sphere(	t_body *body, \
     double u;
     double v;
 
-	if (!body->checker_board && !body->textured)
+	if (body->reflect || (!body->textured && !body->checker_board))
 	{
 		*pixel->color = body->color;
 		return ;
@@ -136,37 +136,34 @@ void	get_color_sphere(	t_body *body, \
 		get_color_texture_sphere(u, v, body->texture, pixel);
 }
 
-void	increase_shadow_bias(t_vector *p, t_vector normal, double scale)
+void	apply_shadow_bias(t_vector *p, t_vector normal, double scale)
 {
 	*p = add_vector(*p, scale_vector(normal, SHADOW_BIAS * scale));	
 }
 
-void	pixel_sphere_set(t_pixel *pixel, t_vector camera_ray, \
+void	pixel_sphere_set(t_pixel *pixel, t_vector ray, \
 							t_body *body, t_scene *scene)
 {
 	double		dist;
-	t_sphere	sphere;
-	double		attenuation;
-	t_vector	p;
+	t_hit_point	hit;
 	int			flip;
-	t_vector	normal;
 
 	dist = -1;
 	flip = 1;
-	sphere = body->sphere;
-	dist = sphere_hit_distance(camera_ray, vector_subtract(sphere.center, \
-								scene->camera.position), sphere, &flip);
+	dist = sphere_hit_distance(ray, vector_subtract(body->sphere.center, \
+								scene->camera.position), body->sphere, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
+		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
+		calc_hit_point_vectors(&hit, ray, \
+		scale_vector(get_normal(hit.p, body->sphere.center), flip));
+		apply_shadow_bias(&hit.p, hit.n, 20 * (2 / body->sphere.radius));
+		get_color_sphere(body, hit.p, pixel);
+		if (body->reflect && scene->depth < MAX_DEPTH)
+			trace_reflection(pixel, hit, *scene);
+		else
+			trace_lights(scene, pixel, hit);
+		pixel->dist = dist;
 		pixel->id = body->id;
-		p = add_vector(scene->camera.position, \
-		scale_vector(camera_ray, dist));
-		normal = scale_vector(get_normal(p, sphere.center), flip);
-		increase_shadow_bias(&p, normal, 20 * (2 / sphere.radius));
-		get_color_sphere(body, p, pixel);
-		if (body->reflect == true)
-			get_color_reflect(p, normal, scene, pixel);
-		attenuation = get_color_attenuation(p, normal, scene->light, scene);
-		set_hit_pixel(scene, pixel, attenuation, dist);
 	}
 }
