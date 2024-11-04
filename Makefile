@@ -6,7 +6,7 @@
 #    By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/08 16:30:33 by victor            #+#    #+#              #
-#    Updated: 2024/10/28 17:51:26 by bszilas          ###   ########.fr        #
+#    Updated: 2024/11/04 10:57:44 by bszilas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,27 +23,22 @@ SRCDIR := src
 SRC := 	minirt.c
 
 SCENEDIR := scene
-SRCSCENE := $(SCENEDIR)/camera.c $(SCENEDIR)/light.c \
-			$(SCENEDIR)/scene.c $(SCENEDIR)/plane.c \
-			$(SCENEDIR)/sphere.c $(SCENEDIR)/cylinder.c \
-			$(SCENEDIR)/disk.c $(SCENEDIR)/add_body.c \
-			$(SCENEDIR)/cone.c
+SRCSCENE :=	$(addprefix $(SCENEDIR)/, $(addsuffix .c,\
+			camera light scene plane sphere \
+			cylinder disk add_body cone))
 
 RENDERDIR := rendering
-SRCRENDER :=	$(RENDERDIR)/image.c $(RENDERDIR)/pixel.c \
-				$(RENDERDIR)/ray_utils.c $(RENDERDIR)/rendering.c \
-				$(RENDERDIR)/color.c  $(RENDERDIR)/drawing.c \
+SRCRENDER :=	$(addprefix $(RENDERDIR)/, $(addsuffix .c,\
+				rendering image pixel ray_utils color drawing threads))
 
 IODIR := io
-SRCIO :=	$(IODIR)/mouse.c $(IODIR)/menu.c $(IODIR)/keys.c \
-			$(IODIR)/parsing.c $(IODIR)/glyph.c \
-			$(IODIR)/container.c
+SRCIO :=	$(addprefix $(IODIR)/, $(addsuffix .c,\
+			mouse menu keys parsing glyph container))
 
 UTILDIR := utils
-SRCUTIL :=	$(UTILDIR)/ft_atod.c \
-		  	$(UTILDIR)/minirt_utils.c $(UTILDIR)/vector_math.c \
-		  	$(UTILDIR)/vector.c $(UTILDIR)/detect_overflow_utils.c \
-		 	$(UTILDIR)/detect_overflow.c
+SRCUTIL :=	$(addprefix $(UTILDIR)/, $(addsuffix .c,\
+			ft_atod minirt_utils vector_math vector \
+			detect_overflow_utils detect_overflow))
 
 LIBS := libft/libft.a memory/memory.a minilibx-linux/libmlx.a
 

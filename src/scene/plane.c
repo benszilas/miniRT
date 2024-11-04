@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 20:27:02 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/21 21:37:49 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 22:01:11 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,7 +118,7 @@ void	get_color_plane(t_body *body, t_vector intersect, t_pixel *pixel)
 	t_vector	right;
 	t_vector	up;
 
-	if (!body->textured && !body->checker_board)
+	if (body->reflect || (!body->textured && !body->checker_board))
 	{
 		*pixel->color = body->color;
 		return ;
@@ -144,31 +144,29 @@ void	get_color_plane(t_body *body, t_vector intersect, t_pixel *pixel)
 		get_color_checker_plane(u, v, pixel);
 }
 
-void	pixel_plane_set(t_pixel *pixel, t_vector camera_ray, \
+void	trace_plane(t_pixel *pixel, t_vector ray, \
 						t_body *body, t_scene *scene)
 {
-	t_vector	p;
+	t_hit_point	hit;
 	double		dist;
 	t_plane		plane;
-	double		attenuation;
 	int			flip;
 
 	plane = body->plane;
 	flip = false;
-	dist = plane_hit_distance(plane, scene->camera.position, \
-			camera_ray, &flip);
+	dist = plane_hit_distance(plane, scene->camera.position, ray, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		*pixel->color = body->color;
-		pixel->id = body->id;
-		p = add_vector(scene->camera.position, scale_vector(camera_ray, dist));
+		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
 		if (flip)
 			plane.normal = plane.inverse_normal;
-		get_color_plane(body, p, pixel);
-		attenuation = get_color_attenuation(p, plane.normal, \
-				scene->light, scene);
-		if (attenuation <= .01)
-			pixel->id = 0;
-		set_hit_pixel(scene, pixel, attenuation, dist);
+		calc_hit_point_vectors(&hit, ray, plane.normal);
+		get_color_plane(body, hit.p, pixel);
+		if (body->reflect && scene->depth < MAX_DEPTH)
+			trace_reflection(pixel, hit, *scene);
+		else
+			trace_lights(scene, pixel, hit);
+		pixel->id = body->id;
+		pixel->dist = dist;
 	}
 }

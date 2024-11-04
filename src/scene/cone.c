@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 10:54:59 by bszilas           #+#    #+#             */
-/*   Updated: 2024/10/23 11:31:27 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 22:04:32 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,27 +134,33 @@ double	cone_hit_distance(t_cone *cn, t_vector ray, t_vector cam, int *flip)
 	return (t);
 }
 
+t_vector	cone_surface_normal(t_cone cn, t_vector p, int flip)
+{
+	return (scale_vector(get_normal(p, add_vector(cn.vertex, \
+	scale_vector(cn.normal, cn.hit_h * cn.tan_a2p1))), flip));
+}
+
 void	trace_cone(t_pixel *pixel, t_vector ray, t_body *body, t_scene *sc)
 {
-	t_vector	p;
-	double		attn;
+	t_hit_point	hit;
 	double		dist;
 	t_cone		cn;
 	int			flip;
 
 	cn = body->cone;
 	flip = 1;
-	dist = cone_hit_distance\
-	(&cn, ray, sc->camera.position, &flip);
+	dist = cone_hit_distance(&cn, ray, sc->camera.position, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		p = add_vector(sc->camera.position, scale_vector(ray, dist));
 		*pixel->color = body->color;
+		hit.p = add_vector(sc->camera.position, scale_vector(ray, dist));
+		calc_hit_point_vectors(&hit, ray, cone_surface_normal(cn, hit.p, flip));
+		if (body->reflect && sc->depth < MAX_DEPTH)
+			trace_reflection(pixel, hit, *sc);
+		else
+			trace_lights(sc, pixel, hit);
 		pixel->id = body->id;
-		cn.normal = scale_vector(get_normal(p, add_vector(cn.vertex, \
-		scale_vector(cn.normal, cn.hit_h * cn.tan_a2p1))), flip);
-		attn = get_color_attenuation(p, cn.normal, sc->light, sc);
-		set_hit_pixel(sc, pixel, attn, dist);
+		pixel->dist = dist;
 	}
 	trace_cone_bottom(pixel, ray, body, sc);
 }

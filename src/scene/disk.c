@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 14:26:27 by bszilas           #+#    #+#             */
-/*   Updated: 2024/10/21 21:36:51 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 21:47:07 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,7 +90,6 @@ double	disk_hit_distance(t_disk disk, t_vector ray, t_vector cam, int *flip)
 	return (-1);
 }
 
-
 void get_color_texture_disk(double u, double v, t_texture *texture, t_pixel *pixel)
 {
 	int tex_u;
@@ -120,7 +119,7 @@ void get_color_disk(t_body *body, t_vector intersect, t_pixel *pixel)
 	t_vector right;
 	t_vector up;
 
-	if (!body->textured && !body->checker_board)
+	if (body->reflect || (!body->textured && !body->checker_board))
 	{
 		*pixel->color = body->color;
 		return ;
@@ -148,8 +147,7 @@ void get_color_disk(t_body *body, t_vector intersect, t_pixel *pixel)
 
 void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 {
-	t_vector	p;
-	double		attn;
+	t_hit_point	hit;
 	double		dist;
 	t_disk		disk;
 	int			flip;
@@ -159,12 +157,16 @@ void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 	dist = disk_hit_distance(disk, ray, scene->camera.position, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		pixel->id = body->id;
+		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
 		if (flip)
 			disk.normal = disk.inverse_normal;
-		p = add_vector(scene->camera.position, scale_vector(ray, dist));
-		get_color_disk(body, p, pixel);
-		attn = get_color_attenuation(p, disk.normal, scene->light, scene);
-		set_hit_pixel(scene, pixel, attn, dist);
+		calc_hit_point_vectors(&hit, ray, disk.normal);
+		get_color_disk(body, hit.p, pixel);
+		if (body->reflect && scene->depth < MAX_DEPTH)
+			trace_reflection(pixel, hit, *scene);
+		else
+			trace_lights(scene, pixel, hit);	
+		pixel->id = body->id;
+		pixel->dist = dist;
 	}
 }

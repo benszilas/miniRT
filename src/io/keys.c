@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:56:44 by victor            #+#    #+#             */
-/*   Updated: 2024/10/29 19:08:53 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 14:04:39 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,46 +14,49 @@
 
 bool	key_move_light(int keycode, t_scene *scene)
 {
+	uint	i;
+
+	i = scene->light_focus;
 	if (keycode == XK_h)
-		return (scene->light.position.x -= 0.1);
+		return (scene->light[i].position.x -= 0.1);
 	else if (keycode == XK_l)
-		return (scene->light.position.x += 0.1);
+		return (scene->light[i].position.x += 0.1);
 	else if (keycode == XK_j)
-		return (scene->light.position.y += 0.1);
+		return (scene->light[i].position.y += 0.1);
 	else if (keycode == XK_k)
-		return (scene->light.position.y -= 0.1);
+		return (scene->light[i].position.y -= 0.1);
 	else if (keycode == XK_i)
-		return (scene->light.position.z += .2);
+		return (scene->light[i].position.z += .2);
 	else if (keycode == XK_o)
-		return (scene->light.position.z -= .2);
+		return (scene->light[i].position.z -= .2);
+	else if (keycode == XK_n)
+		scene->light_focus = (scene->light_focus + 1) % scene->light_count;
 	return (false);
 }
 
 uint	key_change_res(int keycode, t_scene *scene)
 {
-	if (keycode == XK_KP_Subtract)
+	if (keycode == XK_equal)
 	{
-		if (scene->resolution_x == 1)
-			scene->resolution_x = 0;
+		if (scene->resolution_x == 1 )
+			return (scene->resolution_x = 16);
 		if (scene->resolution_y == 1)
-			scene->resolution_y = 0;
-		if (scene->resolution_x >= WI / 25 || scene->resolution_y >= HI / 25)
+			return (scene->resolution_y = 9);
+		if (scene->resolution_x >= SCENE_START_RESOLUTION_X * SCENE_START_RESOLUTION_CAP || scene->resolution_y >= SCENE_START_RESOLUTION_Y * SCENE_START_RESOLUTION_CAP) 
 			return (0);
-		scene->resolution_x += WI / 100;
-		scene->resolution_y += HI / 100;
+		scene->resolution_x *= 2;
+		scene->resolution_y *= 2;
 	}
-	else if (keycode == XK_KP_Add)
+	else if (keycode == XK_minus)
 	{
-		if ((int)(scene->resolution_x - WI / 100) <= 0 \
-			|| (int)(scene->resolution_y - HI / 100 <= 0))
+		if (scene->resolution_x == 16 )
+			return (scene->resolution_x = 1);
+		if (scene->resolution_y == 9)
+			return (scene->resolution_y = 1);
+		if (scene->resolution_x > 1 && scene->resolution_y > 1)
 		{
-			scene->resolution_x = 1;
-			scene->resolution_y = 1;
-		}
-		else
-		{
-			scene->resolution_x -= WI / 100;
-			scene->resolution_y -= HI / 100;
+			scene->resolution_x /= 2;
+			scene->resolution_y /= 2;
 		}
 	}
 	else if (keycode == XK_Return)
@@ -97,6 +100,8 @@ uint	key_misc_function(int keycode, t_scene *scene, t_data *data)
 		data->mouse.grabbed = NULL;
 		return (true);
 	}
+	else if (keycode == XK_g)
+		scene->gloss = !scene->gloss;
 	return (false);
 }
 
@@ -167,8 +172,8 @@ int	move_body(int keycode, t_body *body)
 
 void	key_press_distribute(int keycode, t_data *data, t_scene *scene)
 {
-	if (move_body(keycode, scene->focus2) || \
-	key_move_focused(keycode, scene->focus) || \
+	if (move_body(keycode, scene->body_focus) || \
+	key_move_focused(keycode, &scene->camera.position) || \
 	key_rotate_cam(keycode, scene) || \
 	key_misc_function(keycode, scene, data) || \
 	key_change_res(keycode, scene) || \

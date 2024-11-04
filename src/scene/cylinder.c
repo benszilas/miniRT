@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/17 11:13:10 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/22 14:50:07 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 21:50:45 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -195,7 +195,7 @@ void get_color_cylinder(t_body *body, t_vector intersect, t_pixel *pixel)
 	t_vector	local;
 	double theta;
 
-    if (!body->checker_board && !body->textured)
+	if (body->reflect || (!body->textured && !body->checker_board))
     {
         *pixel->color = body->color;
         return;
@@ -223,6 +223,7 @@ void	trace_cyl_caps(t_pixel *px, t_vector ray, t_body *cyl, t_scene *sc)
 	cap.checker_board = cyl->checker_board;
 	cap.textured = cyl->textured;
 	cap.texture = cyl->texture;
+	cap.reflect = cyl->reflect;
 	cap.disk = (t_disk){.point = cyl->cylinder.top, \
 		.normal = cyl->cylinder.normal, .radius = cyl->cylinder.radius, \
 			.inverse_normal = scale_vector(cyl->cylinder.normal, -1)};
@@ -231,31 +232,34 @@ void	trace_cyl_caps(t_pixel *px, t_vector ray, t_body *cyl, t_scene *sc)
 	trace_disk(px, ray, &cap, sc);
 }
 
+t_vector	cyl_normal(t_cylinder cy, t_vector p, int flip)
+{
+	return (scale_vector(get_normal(p, add_vector(cy.bottom, \
+						scale_vector(cy.normal, cy.hit_h))), flip));
+}
+
 void	trace_cyl(t_pixel *pixel, t_vector ray, t_body *body, t_scene *sc)
 {
-	t_vector	p;
-	double		attn;
+	t_hit_point	hit;
 	double		dist;
 	t_cylinder	cy;
 	int			flip;
 
-	calc_cyl_data(&body->cylinder);
 	cy = body->cylinder;
+	calc_cyl_data(&cy);
+	trace_cyl_caps(pixel, ray, body, sc);
 	flip = 1;
-	dist = cyl_hit_distance \
-	(&cy, ray, sc->camera.position, &flip);
+	dist = cyl_hit_distance(&cy, ray, sc->camera.position, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		p = add_vector(sc->camera.position, scale_vector(ray, dist));
+		hit.p = add_vector(sc->camera.position, scale_vector(ray, dist));
+		calc_hit_point_vectors(&hit, ray, cyl_normal(cy, hit.p, flip));
+		get_color_cylinder(body, hit.p, pixel);
+		if (body->reflect && sc->depth < MAX_DEPTH)
+			trace_reflection(pixel, hit, *sc);
+		else
+			trace_lights(sc, pixel, hit);
 		pixel->id = body->id;
-		get_color_cylinder(body, p, pixel);
-		if (body->reflect == true)
-			get_color_reflect(p, add_vector(cy.bottom, \
-						scale_vector(cy.normal, cy.hit_h)), sc, pixel);
-		cy.normal = scale_vector(get_normal(p, add_vector(cy.bottom, \
-						scale_vector(cy.normal, cy.hit_h))), flip);
-		attn = get_color_attenuation(p, cy.normal, sc->light, sc);
-		set_hit_pixel(sc, pixel, attn, dist);
+		pixel->dist = dist;
 	}
-	trace_cyl_caps(pixel, ray, body, sc);
 }

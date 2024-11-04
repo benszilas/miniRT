@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 20:36:20 by bszilas           #+#    #+#             */
-/*   Updated: 2024/10/21 16:31:59 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/03 20:23:51 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,17 @@ t_vector	cross_product(t_vector a, t_vector b)
 { 
 	return ((t_vector){a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, \
 	a.x * b.y - a.y * b.x});
+}
+
+t_vector	reflect_vector(t_vector incoming, t_vector axis)
+{
+	return (vector_subtract(incoming, \
+	scale_vector(axis, 2 * dot_product(axis, incoming))));
+}
+
+void	calc_hit_point_vectors(t_hit_point *hit, t_vector ray, t_vector n)
+{
+	hit->n = n;
+	hit->v = scale_vector(ray, -1);
+	hit->r = reflect_vector(ray, n);
 }
