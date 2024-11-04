@@ -53,6 +53,10 @@ move camera or object: WASDQE
 
 rotate camera or object: arrow keys
 
+move spotlight: IOHJKL
+
+next spotlight: N
+
 select object: right click
 
 change object properties: click on object specific menu item
@@ -64,6 +68,8 @@ move object on xy axis: lmb + drag
 add object: click menu item
 
 change fov: mouse wheel
+
+toggle glossiness(phong reflection): g
 
 # the .rt file describes a 3d scene
 
