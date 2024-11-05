@@ -49,7 +49,7 @@ void	threads_init(t_thread thread[], t_data *data)
 		thread[i].id = i;
 		thread[i].starty = i * THREAD_HEIGHT;
 		thread[i].pixel = data->pixel;
-		thread[i].mutex = &data->scene.mutex;
+		thread[i].mutex = &data.mutex;
 		pthread_create(&thread[i].thread, NULL, \
 				thread_rendering_loop, &thread[i]);
 		i++;
@@ -75,14 +75,14 @@ void	*thread_rendering_loop(void *thread_ptr)
 	thread = (t_thread *)thread_ptr;
 	while (1)
 	{
-		pthread_mutex_lock(&thread->data->mutex);
+		pthread_mutex_lock(thread->mutex);
 		while (thread->data->go == false)
-			pthread_cond_wait(&thread->data->cond, &thread->data->mutex);
-		pthread_mutex_unlock(&thread->data->mutex);
+			pthread_cond_wait(&thread->data->cond, thread->mutex);
+		pthread_mutex_unlock(thread->mutex);
 		thread_define_camera_rays(thread, thread->pixel, \
 				&thread->scene, thread->camera);
 		pthread_barrier_wait(&thread->data->barrier);
-		usleep(10);
+		usleep(1000);
 	}
 	return (NULL);
 }
