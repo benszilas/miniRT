@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minirt_utils.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: victor </var/spool/mail/victor>            +#+  +:+       +#+        */
+/*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:50:35 by victor            #+#    #+#             */
-/*   Updated: 2024/09/15 11:03:37 by victor           ###   ########.fr       */
+/*   Updated: 2024/11/05 14:23:40 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,6 @@ int	ft_close(int fd)
 	return (1);
 }
 
-/* flag corresponds to O_RDONLY, O_CREAT etc.; 
- * When opening a file, permissions doesnt can be set to 0*/
 void	ft_open(int *fd, const char *path, int flag, int permissons)
 {
 	if (permissons > 0)

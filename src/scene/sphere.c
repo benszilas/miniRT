@@ -6,29 +6,11 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 17:52:32 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 21:47:46 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/05 12:03:45 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minirt.h"
-
-void	body_sphere_print(t_body *body)
-{
-	t_sphere	sphere;
-
-	sphere = body->sphere;
-	ft_printf("sphere:\nx: %f\ny: %f\nz: %f\nrad: %f\ncolor: %X\nid: %d\n\n", \
-			sphere.center.x, sphere.center.y, sphere.center.z, \
-			sphere.radius, body->color, body->id);
-}
-
-void	sphere_save(t_sphere sphere, uint color, int fd)
-{
-	ft_fprintf(fd, "sp %f,%f,%f %f", \
-			sphere.center.x, sphere.center.y, sphere.center.z, \
-			sphere.radius);
-	color_print(color, fd);
-}
 
 bool	parse_sphere(char *entry, uint line_count, \
 						t_body *body, uint body_count)
@@ -81,54 +63,25 @@ double	sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 	return (smaller_non_negative(t0, t1));
 }
 
-void	get_color_checker_sphere(double u, double v, t_pixel *pixel)
-{
-
-	int checker_u;
-	int checker_v;
-
-	checker_u = round(u * CHECKER_GRID_SIZE);
-	checker_v = round(v * CHECKER_GRID_SIZE);
-	if ((checker_u + checker_v) % 2 == 0)
-		*pixel->color = 0x000000;
-	else
-		*pixel->color = 0xffffff;
-}
-
-void	get_color_texture_sphere(double u, double v, \
-								t_texture *texture, t_pixel *pixel)
-{
-	int tex_u;
-	int tex_v;
-
-	tex_u = (int)(u * (texture->width - 1)) % texture->width;
-	tex_v= (int)(v * (texture->height - 1)) % texture->height;
-	if (tex_u < 0)
-		tex_u += texture->width;
-	if (tex_v < 0)
-		tex_v += texture->height;
-	*pixel->color = texture->pixel[tex_v * texture->width + tex_u]; 
-}
-
 void	get_color_sphere(	t_body *body, \
 							t_vector intersect, \
 							t_pixel *pixel)
 {
-    double theta;
-    double phi;
-    double u;
-    double v;
+	double	theta;
+	double	phi;
+	double	u;
+	double	v;
 
-	if (body->reflect || (!body->textured && !body->checker_board))
+	if (!body->checker_board && !body->textured)
 	{
 		*pixel->color = body->color;
 		return ;
 	}
-    intersect = vector_subtract(intersect, body->sphere.center);
-	theta = atan2(intersect.x, intersect.z); 
+	intersect = vector_subtract(intersect, body->sphere.center);
+	theta = atan2(intersect.x, intersect.z);
 	phi = acos(intersect.y / body->sphere.radius);
 	v = phi / M_PI;
-	u = (theta + M_PI) / (2 * M_PI);;
+	u = (theta + M_PI) / (2 * M_PI);
 	u = 1 - (u + 0.5);
 	if (body->checker_board)
 		get_color_checker_sphere(u, v, pixel);
@@ -136,34 +89,32 @@ void	get_color_sphere(	t_body *body, \
 		get_color_texture_sphere(u, v, body->texture, pixel);
 }
 
-void	apply_shadow_bias(t_vector *p, t_vector normal, double scale)
-{
-	*p = add_vector(*p, scale_vector(normal, SHADOW_BIAS * scale));	
-}
-
-void	pixel_sphere_set(t_pixel *pixel, t_vector ray, \
+void	pixel_sphere_set(t_pixel *pixel, t_vector camera_ray, \
 							t_body *body, t_scene *scene)
 {
 	double		dist;
-	t_hit_point	hit;
+	t_sphere	sphere;
+	double		attenuation;
+	t_vector	p;
 	int			flip;
 
 	dist = -1;
 	flip = 1;
-	dist = sphere_hit_distance(ray, vector_subtract(body->sphere.center, \
-								scene->camera.position), body->sphere, &flip);
+	sphere = body->sphere;
+	dist = sphere_hit_distance(camera_ray, vector_subtract(sphere.center, \
+								scene->camera.position), sphere, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
-		calc_hit_point_vectors(&hit, ray, \
-		scale_vector(get_normal(hit.p, body->sphere.center), flip));
-		apply_shadow_bias(&hit.p, hit.n, 20 * (2 / body->sphere.radius));
-		get_color_sphere(body, hit.p, pixel);
-		if (body->reflect && scene->depth < MAX_DEPTH)
-			trace_reflection(pixel, hit, *scene);
-		else
-			trace_lights(scene, pixel, hit);
-		pixel->dist = dist;
 		pixel->id = body->id;
+		p = add_vector(scene->camera.position, \
+		scale_vector(camera_ray, dist));
+		sphere.normal = scale_vector(get_normal(p, sphere.center), flip);
+		apply_shadow_bias(&p, sphere.normal, 20 * (2 / sphere.radius));
+		get_color_sphere(body, p, pixel);
+		if (body->reflect == true)
+			get_color_reflect(p, sphere.normal, scene, pixel);
+		attenuation = get_color_attenuation(p, sphere.normal, scene->light, \
+		scene);
+		set_hit_pixel(scene, pixel, attenuation, dist);
 	}
 }

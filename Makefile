@@ -6,7 +6,7 @@
 #    By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/08 16:30:33 by victor            #+#    #+#              #
-#    Updated: 2024/11/04 10:57:44 by bszilas          ###   ########.fr        #
+#    Updated: 2024/11/06 12:05:54 by bszilas          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,21 +24,24 @@ SRC := 	minirt.c
 
 SCENEDIR := scene
 SRCSCENE :=	$(addprefix $(SCENEDIR)/, $(addsuffix .c,\
-			camera light scene plane sphere \
-			cylinder disk add_body cone))
+			camera camera_utils light scene scene_utils plane plane_utils \
+			sphere sphere_utils cylinder cylinder_utils cylinder_calc \
+			disk disk_utils add_body cone cone_utils cone_calc))
 
 RENDERDIR := rendering
 SRCRENDER :=	$(addprefix $(RENDERDIR)/, $(addsuffix .c,\
-				rendering image pixel ray_utils color drawing threads))
+				rendering image pixel ray_utils color color_calc drawing))
 
 IODIR := io
 SRCIO :=	$(addprefix $(IODIR)/, $(addsuffix .c,\
-			mouse menu keys parsing glyph container))
+			mouse menu keys parsing glyph container add_menu_item \
+			change_menu_item map_body_menu map_menu_items menu_body \
+			mouse2 key_movements container_item parsing2))
 
 UTILDIR := utils
 SRCUTIL :=	$(addprefix $(UTILDIR)/, $(addsuffix .c,\
 			ft_atod minirt_utils vector_math vector \
-			detect_overflow_utils detect_overflow))
+			detect_overflow_utils detect_overflow vector_utils))
 
 LIBS := libft/libft.a memory/memory.a minilibx-linux/libmlx.a
 

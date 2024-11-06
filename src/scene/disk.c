@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 14:26:27 by bszilas           #+#    #+#             */
-/*   Updated: 2024/11/03 21:47:07 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/05 11:40:56 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,17 +24,6 @@ bool	move_disk(int keycode, t_disk *disk)
 		return (false);
 	disk->inverse_normal = scale_vector(disk->normal, -1);
 	return (true);
-}
-
-void	print_disk(t_body *body)
-{
-	t_disk	disk;
-
-	disk = body->disk;
-	ft_printf("disk:\nx: %f\ny: %f\nz: %f\nnormal:\nx: %f\ny: %f" \
-			"\nz: %f\nrad: %f\ncolor: %X\nid: %d\n\n", disk.point.x, \
-			disk.point.y, disk.point.z, disk.normal.x, disk.normal.y, \
-			disk.normal.z, disk.radius, body->color, body->id);
 }
 
 bool	parse_disk(char *entry, uint line_count, t_body *body, uint body_count)
@@ -90,64 +79,10 @@ double	disk_hit_distance(t_disk disk, t_vector ray, t_vector cam, int *flip)
 	return (-1);
 }
 
-void get_color_texture_disk(double u, double v, t_texture *texture, t_pixel *pixel)
-{
-	int tex_u;
-	int tex_v;
-
-	tex_u = (int)(u * (texture->width - 1)) % texture->width;
-	tex_v= (int)((1 - v) * (texture->height - 1)) % texture->height;
-	if (tex_u < 0)
-		tex_u += texture->width;
-	if (tex_v < 0)
-		tex_v += texture->height;
-	*pixel->color = texture->pixel[tex_v * texture->width + tex_u]; 
-}
-
-void get_color_checker_disk(double u, double v, t_pixel *pixel)
-{
-    if (((int)floor(u) + (int)floor(v)) % 2 == 0)
-        *pixel->color = 0x000000;
-    else
-        *pixel->color = 0xffffff;
-}
-
-void get_color_disk(t_body *body, t_vector intersect, t_pixel *pixel)
-{
-	double u;
-	double v;
-	t_vector right;
-	t_vector up;
-
-	if (body->reflect || (!body->textured && !body->checker_board))
-	{
-		*pixel->color = body->color;
-		return ;
-	}
-    intersect = vector_subtract(intersect, body->disk.point);
-    if (fabs(body->disk.normal.y) > 0.9)
-    {
-        right = (t_vector){1, 0, 0};
-        up = (t_vector){0, 0, 1};
-    }
-    else
-    {
-        right = cross_product(body->disk.normal, (t_vector){0, 1, 0});
-        up = cross_product(right, body->disk.normal);
-    }
-	normalize_vector(&right);
-    normalize_vector(&up);
-    u = dot_product(intersect, right) * .5;
-    v = dot_product(intersect, up) * .5;
-	if (body->textured)
-		get_color_texture_disk(u - floor(u), v - floor(v), body->texture, pixel);
-	else if (body->checker_board)
-		get_color_checker_disk(u, v, pixel);
-}
-
 void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 {
-	t_hit_point	hit;
+	t_vector	p;
+	double		attn;
 	double		dist;
 	t_disk		disk;
 	int			flip;
@@ -157,16 +92,12 @@ void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 	dist = disk_hit_distance(disk, ray, scene->camera.position, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
+		pixel->id = body->id;
 		if (flip)
 			disk.normal = disk.inverse_normal;
-		calc_hit_point_vectors(&hit, ray, disk.normal);
-		get_color_disk(body, hit.p, pixel);
-		if (body->reflect && scene->depth < MAX_DEPTH)
-			trace_reflection(pixel, hit, *scene);
-		else
-			trace_lights(scene, pixel, hit);	
-		pixel->id = body->id;
-		pixel->dist = dist;
+		p = add_vector(scene->camera.position, scale_vector(ray, dist));
+		get_color_disk(body, p, pixel);
+		attn = get_color_attenuation(p, disk.normal, scene->light, scene);
+		set_hit_pixel(scene, pixel, attn, dist);
 	}
 }

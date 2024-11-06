@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 20:27:02 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 22:01:11 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/05 11:55:47 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,18 +26,6 @@ bool	move_plane(int keycode, t_plane *plane)
 	return (true);
 }
 
-void	body_plane_print(t_body *body)
-{
-	t_plane	plane;
-
-	plane = body->plane;
-	ft_printf("plane:\nx: %f\ny: %f\nz: %f\nnormal:\nx: %f\n" \
-			"y: %f\nz: %f\ncolor: %X\nid: %d\n\n", plane.point.x, \
-			plane.point.y, plane.point.z, \
-			plane.normal.x, plane.normal.y, plane.normal.z, \
-			body->color, body->id);
-}
-
 bool	parse_plane(char *entry, uint line_count, t_body *body, uint body_count)
 {
 	char	*params[9];
@@ -55,7 +43,7 @@ bool	parse_plane(char *entry, uint line_count, t_body *body, uint body_count)
 	body->plane = (t_plane){
 		.point.x = ft_atod(params[0]), .point.y = ft_atod(params[1]), \
 		.point.z = ft_atod(params[2]), .normal.x = ft_atod(params[3]), \
-		.normal.y = ft_atod(params[4]),	.normal.z = ft_atod(params[5])};
+		.normal.y = ft_atod(params[4]), .normal.z = ft_atod(params[5])};
 	body->color = parse_body_color(params + 6, &error);
 	body->id = id_set(ID_GROUP_PLANE, body_count);
 	if (error)
@@ -66,12 +54,27 @@ bool	parse_plane(char *entry, uint line_count, t_body *body, uint body_count)
 	return (true);
 }
 
-void	plane_save(t_plane plane, uint color, int fd)
+void	get_color_plane(t_body *body, t_vector intersect, t_pixel *pixel)
 {
-	ft_fprintf(fd, "pl %f,%f,%f %f,%f,%f", \
-			plane.point.x, plane.point.y, plane.point.z, \
-			plane.normal.x, plane.normal.y, plane.normal.z);
-	color_print(color, fd);
+	double		u;
+	double		v;
+	t_vector	right;
+	t_vector	up;
+
+	if (!body->textured && !body->checker_board)
+	{
+		*pixel->color = body->color;
+		return ;
+	}
+	intersect = vector_subtract(intersect, body->plane.point);
+	calc_object_space(body->plane.normal, &right, &up);
+	u = dot_product(intersect, right) * .5;
+	v = dot_product(intersect, up) * .5;
+	if (body->textured)
+		get_color_texture_plane(u - floor(u), v - floor(v), body->texture, \
+		pixel);
+	else if (body->checker_board)
+		get_color_checker_plane(u, v, pixel);
 }
 
 double	plane_hit_distance(t_plane pl, t_vector cam, \
@@ -89,84 +92,31 @@ double	plane_hit_distance(t_plane pl, t_vector cam, \
 	return (-1);
 }
 
-void	get_color_texture_plane(double u, double v, t_texture *texture, t_pixel *pixel)
-{
-	int tex_u;
-	int tex_v;
-
-	tex_u = (int)(u * (texture->width - 1)) % texture->width;
-	tex_v= (int)((1 - v) * (texture->height - 1)) % texture->height;
-	if (tex_u < 0)
-		tex_u += texture->width;
-	if (tex_v < 0)
-		tex_v += texture->height;
-	*pixel->color = texture->pixel[tex_v * texture->width + tex_u]; 
-}
-
-void	get_color_checker_plane(double u, double v, t_pixel *pixel)
-{
-    if (((int)floor(u) + (int)floor(v)) % 2 == 0)
-        *pixel->color = 0x000000;
-    else
-        *pixel->color = 0xffffff;
-}
-
-void	get_color_plane(t_body *body, t_vector intersect, t_pixel *pixel)
-{
-	double		u;
-	double 		v;
-	t_vector	right;
-	t_vector	up;
-
-	if (body->reflect || (!body->textured && !body->checker_board))
-	{
-		*pixel->color = body->color;
-		return ;
-	}
-    intersect = vector_subtract(intersect, body->plane.point);
-    if (fabs(body->plane.normal.y) > 0.9)
-    {
-        right = (t_vector){1, 0, 0};
-        up = (t_vector){0, 0, 1};
-    }
-    else
-    {
-        right = cross_product(body->plane.normal, (t_vector){0, 1, 0});
-        up = cross_product(right, body->plane.normal);
-    }
-	normalize_vector(&right);
-    normalize_vector(&up);
-    u = dot_product(intersect, right) * .5;
-    v = dot_product(intersect, up) * .5;
-	if (body->textured)
-		get_color_texture_plane(u - floor(u), v - floor(v), body->texture, pixel);
-	else if (body->checker_board)
-		get_color_checker_plane(u, v, pixel);
-}
-
-void	trace_plane(t_pixel *pixel, t_vector ray, \
+void	pixel_plane_set(t_pixel *pixel, t_vector camera_ray, \
 						t_body *body, t_scene *scene)
 {
-	t_hit_point	hit;
+	t_vector	p;
 	double		dist;
 	t_plane		plane;
+	double		attenuation;
 	int			flip;
 
 	plane = body->plane;
 	flip = false;
-	dist = plane_hit_distance(plane, scene->camera.position, ray, &flip);
+	dist = plane_hit_distance(plane, scene->camera.position, \
+			camera_ray, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
-		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
+		*pixel->color = body->color;
+		pixel->id = body->id;
+		p = add_vector(scene->camera.position, scale_vector(camera_ray, dist));
 		if (flip)
 			plane.normal = plane.inverse_normal;
-		calc_hit_point_vectors(&hit, ray, plane.normal);
-		get_color_plane(body, hit.p, pixel);
-		if (body->reflect && scene->depth < MAX_DEPTH)
-			trace_reflection(pixel, hit, *scene);
-		else
-			trace_lights(scene, pixel, hit);
-		pixel->id = body->id;
-		pixel->dist = dist;
+		get_color_plane(body, p, pixel);
+		attenuation = get_color_attenuation(p, plane.normal, \
+				scene->light, scene);
+		if (attenuation <= .01)
+			pixel->id = 0;
+		set_hit_pixel(scene, pixel, attenuation, dist);
 	}
 }

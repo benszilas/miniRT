@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   image.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: victor </var/spool/mail/victor>            +#+  +:+       +#+        */
+/*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 14:12:28 by victor            #+#    #+#             */
-/*   Updated: 2024/10/21 17:14:30 by vvobis           ###   ########.fr       */
+/*   Updated: 2024/11/05 13:04:05 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ void	pixels_image_syncronize(t_img *image, t_pixel *pixel)
 		x = 0;
 		while (x < WI)
 		{
-			pixel[y * WI + x].color = &((int *)image->data)[y * WI + x];
+			pixel[y * WI + x].color = &((uint *)image->data)[y * WI + x];
 			x++;
 		}
 		y++;

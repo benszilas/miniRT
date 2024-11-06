@@ -6,12 +6,11 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:33:29 by victor            #+#    #+#             */
-/*   Updated: 2024/11/04 10:58:19 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 12:09:57 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minirt.h"
-#include <mlx.h>
 
 int	close_window(void *data_ptr)
 {
@@ -64,10 +63,7 @@ void	initialize_data(t_data *data, char *path)
 	ft_bzero(data, sizeof(*data));
 	data->mlx = mlx_init();
 	if (!data->mlx)
-	{
-		ft_putendl_fd("Failed to initialize mlx", 2);
-		exit (1);
-	}
+		return (ft_putendl_fd("Failed to initialize mlx", 2), exit(1));
 	data->win = mlx_new_window(data->mlx, WI, HI, "MiniRT");
 	if (!data->win)
 	{
@@ -76,6 +72,7 @@ void	initialize_data(t_data *data, char *path)
 		ft_free(data->mlx);
 		exit (1);
 	}
+	lst_memory(data, data_destroy_func, ADD);
 	data->pixel = pixel_plane_create();
 	data->func_ptr = help_menu_draw;
 	data->mouse.data = data;
@@ -83,30 +80,25 @@ void	initialize_data(t_data *data, char *path)
 	data->scene.pixel = data->pixel;
 	data->image = image_create(data->mlx, WI, HI);
 	data->menu = menus_create(data);
-	data->scene.light_focus = 0;
-	data->scene.body_focus = NULL;
+	data->scene.focus = &data->scene.camera.position;
+	data->scene.focus2 = NULL;
 	pixels_image_syncronize(&data->image, data->pixel);
+	pixels_image_syncronize(&data->image, data->scene.pixel);
 }
 
 int	main(int argc, char **argv)
 {
 	t_data	data;
 	char	*path;
-	t_thread	thread[THREAD_COUNT];
-	t_scene		scene[THREAD_COUNT];
-
 
 	if (argc == 1)
-		path = "scenes/multilight.rt";
+		path = "scenes/basic_1.rt";
 	else if (argc == 2 && ft_strlen(argv[1]) > 3 \
 			&& ft_strncmp(&argv[1][ft_strlen(argv[1]) - 3], ".rt\0", 4) == 0)
 		path = argv[1];
 	else
-		return (ft_fprintf(STDERR_FILENO, "Invalid Argument to Program!\nExiting...\n"));
+		return (ft_putendl_fd("Invalid arguments", 2), 1);
 	initialize_data(&data, path);
-	lst_memory(&data, data_destroy_func, ADD);
-	threads_init(thread, &data);
-	data.threads = thread;
 	rendering_loop(&data);
 	mlx_hook(data.win, 2, (1L << 0), key_press, &data);
 	mlx_mouse_hook(data.win, mouse_press, &data);

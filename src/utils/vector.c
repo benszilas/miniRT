@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:42:35 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/21 21:35:48 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/05 12:58:18 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,13 +43,4 @@ void	normalize_vector(t_vector *vec)
 t_vector	vector_subtract(t_vector vec1, t_vector vec2)
 {
 	return ((t_vector){vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z});
-}
-
-void	vector_print(t_vector vector, int fd)
-{
-	ft_putnbrf_fd(vector.x, fd, 3);
-	ft_putchar_fd(',', fd);
-	ft_putnbrf_fd(vector.y, fd, 3);
-	ft_putchar_fd(',', fd);
-	ft_putnbrf_fd(vector.z, fd, 3);
 }
