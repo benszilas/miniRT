@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/15 00:01:14 by victor            #+#    #+#             */
-/*   Updated: 2024/11/02 23:30:52 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 11:39:26 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,12 +110,22 @@ void	mouse_scroll(int button, t_scene *scene, t_mouse *mouse)
 
 int	mouse_press(int button, int x, int y, t_data *data)
 {
+	t_body	*body;
+
 	if (button == LEFT_CLICK)
 		mouse_click_left(x, y, &data->scene, &data->mouse);
 	else if (button == RIGHT_CLICK)
 		mouse_click_right(x, y, data, &data->mouse);
 	else
 		mouse_scroll(button, &data->scene, &data->mouse);
+	if (data->mouse.grabbed)
+	{
+		body = data->mouse.grabbed;
+		if (body->type == BODY_CYLINDER)
+			calc_cyl_data(&body->cylinder);
+		else if (body->type == BODY_CONE)
+			calc_cone_data(&body->cone);
+	}
 	rendering_loop(data);
 	return (0);
 }
@@ -171,6 +181,7 @@ void	mouse_left_move(int x, int y, t_mouse *mouse, t_scene *scene)
 		{
 			(mouse->grabbed)->cylinder.center.x += dx / 10;
 			(mouse->grabbed)->cylinder.center.y -= dy / 10;
+			calc_cyl_data(&((t_body *)mouse->grabbed)->cylinder);
 		}
 	}
 }
