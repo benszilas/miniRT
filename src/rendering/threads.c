@@ -49,7 +49,7 @@ void	threads_init(t_thread thread[], t_data *data)
 		thread[i].id = i;
 		thread[i].starty = i * THREAD_HEIGHT;
 		thread[i].pixel = data->pixel;
-		thread[i].mutex = &data.mutex;
+		thread[i].mutex = &data->mutex;
 		pthread_create(&thread[i].thread, NULL, \
 				thread_rendering_loop, &thread[i]);
 		i++;
