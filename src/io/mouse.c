@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/15 00:01:14 by victor            #+#    #+#             */
-/*   Updated: 2024/11/08 06:23:23 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:36:56 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void	mouse_click_right(int x, int y, t_data *data, t_mouse *mouse)
 	{
 		body = body_get_by_id(data->pixel[y * WI + x].id, &data->scene);
 		data->scene.body_focus = body;
-/* 		if (id_group == ID_GROUP_PLANE)
+		if (id_group == ID_GROUP_PLANE)
 			plane_menu_map(&data->menu[ID_GROUP_PLANE], body, &body->color);
 		else if (id_group == ID_GROUP_SPHERE)
 			sphere_menu_map(&data->menu[ID_GROUP_SPHERE], body, &body->color);
@@ -71,11 +71,11 @@ void	mouse_click_right(int x, int y, t_data *data, t_mouse *mouse)
 			cone_menu_map(&data->menu[ID_GROUP_CONE], body, &body->color);
 		else if (id_group == ID_GROUP_DISC)
 			disk_menu_map(&data->menu[ID_GROUP_DISC], body, &body->color);
- */	}
+	}
 	else
 		mouse->grabbed = NULL;
-/* 	data->param = &data->menu[id_group];
-	data->func_ptr = container_draw; */
+	data->param = &data->menu[id_group];
+	data->func_ptr = container_draw;
 }
 
 void	mouse_scroll(int button, t_scene *scene, t_mouse *mouse)

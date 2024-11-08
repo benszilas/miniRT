@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:16 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/08 06:23:36 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:39:12 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,7 +123,10 @@ uint	rendering_loop(t_data *data)
 	pthread_rwlock_wrlock(&data->rwlock);
 	/*tell threads they can now wait for read locks*/
 	pthread_barrier_wait(&data->barrier);
-	help_menu_draw(data, NULL);
+	if (data->func_ptr)
+		data->func_ptr(data, data->param);
+	else
+		help_menu_draw(data, NULL);
 	mlx_put_image_to_window(data->mlx, data->win, &data->image, 0, 0);
 	mlx_do_sync(data->mlx);
 	return (0);

@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:30 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/08 06:27:24 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:46:28 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ t_body	*body_get_by_id(int id, t_scene *scene)
 	i = 0;
 	if (id < 0)
 		return (0);
-	printf("id: %d\n", id);
 	while (i < scene->body_cursor)
 	{
 		if (scene->body[i].id == id)

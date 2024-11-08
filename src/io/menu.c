@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:58:26 by victor            #+#    #+#             */
-/*   Updated: 2024/11/08 06:08:04 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:45:35 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -286,14 +286,14 @@ void	help_menu_draw(void *data_ptr, void *pixel)
 	(void)pixel;
 	data = data_ptr;
 	rt_draw_rect_blend(background, data->pixel, 0, HELP_MENU_BG);
-	glyph_print(10, 10, "navigation:\n\nrmouse: select object\n" \
-						"r mouse on empty space: deselect\n" \
-						"wasdqe: move camera or selected object\n" \
-						"arrow keys: rotate camera or object\n" \
-						"l mouse: drag camera or object\n\n" \
+	glyph_print(10, 10, "navigation:\n\nleft mouse button: show help\n" \
+						"right mouse button: select object\n\n" \
+						"wasdqe: move\n" \
+						"arrow keys: rotate\n" \
+						"left mouse button: drag\n\n" \
 						"iohjkl: move spot light\n" \
 						"n: select next light\n\n" \
-						"r: resolution++ or anti-aliasing on\nt: resolution-- or anti-aliasing off\n\n" \
+						"r: anti-aliasing on\nt: anti-aliasing off or decrease resolution\n\n" \
 						"g: object glossiness on /off\n" \
 						"b: sky sphere on/off\n\n" \
 						"esc: exit\n", data->pixel);
