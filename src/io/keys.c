@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:56:44 by victor            #+#    #+#             */
-/*   Updated: 2024/11/03 14:04:39 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:47:28 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,35 +36,29 @@ bool	key_move_light(int keycode, t_scene *scene)
 
 uint	key_change_res(int keycode, t_scene *scene)
 {
-	if (keycode == XK_equal)
+	if (keycode == XK_t)
 	{
-		if (scene->resolution_x == 1 )
-			return (scene->resolution_x = 16);
-		if (scene->resolution_y == 1)
-			return (scene->resolution_y = 9);
+		if (scene->anti_aliasing)
+			return (scene->anti_aliasing = false, 1);
+		if (scene->resolution_x == 1 && scene->resolution_y == 1)
+			return (scene->resolution_x = SCENE_START_RESOLUTION_X, \
+					scene->resolution_y = SCENE_START_RESOLUTION_Y, 1);
 		if (scene->resolution_x >= SCENE_START_RESOLUTION_X * SCENE_START_RESOLUTION_CAP || scene->resolution_y >= SCENE_START_RESOLUTION_Y * SCENE_START_RESOLUTION_CAP) 
-			return (0);
+			return (false);
 		scene->resolution_x *= 2;
 		scene->resolution_y *= 2;
 	}
-	else if (keycode == XK_minus)
+	else if (keycode == XK_r)
 	{
-		if (scene->resolution_x == 16 )
-			return (scene->resolution_x = 1);
-		if (scene->resolution_y == 9)
-			return (scene->resolution_y = 1);
+		if (scene->resolution_x == 1 && scene->resolution_y == 1)
+			return (scene->anti_aliasing = ANTI_ALIASING_FACTOR, 1);
+		if (scene->resolution_x == SCENE_START_RESOLUTION_X \
+		&& scene->resolution_y == SCENE_START_RESOLUTION_Y)
+			return (scene->resolution_x = 1, scene->resolution_y = 1, 1);
 		if (scene->resolution_x > 1 && scene->resolution_y > 1)
-		{
-			scene->resolution_x /= 2;
-			scene->resolution_y /= 2;
-		}
+			return (scene->resolution_x /= 2, scene->resolution_y /= 2, 1);
 	}
-	else if (keycode == XK_Return)
-		return (scene->resolution_x = scene->resolution_y = 1);
-	else if (keycode == XK_BackSpace)
-		return (scene->camera.position = (t_vector){0, 0, 0}, \
-				scene->camera.fov = 1);
-	return (0);
+	return (false);
 }
 
 bool	key_move_focused(int keycode, t_vector *focus)
@@ -102,6 +96,11 @@ uint	key_misc_function(int keycode, t_scene *scene, t_data *data)
 	}
 	else if (keycode == XK_g)
 		scene->gloss = !scene->gloss;
+	else if (keycode == XK_b)
+	{
+		scene->sky_sphere = !scene->sky_sphere;
+		scene->ambient.color ^= SKY_COLOR;
+	}
 	return (false);
 }
 
@@ -113,7 +112,7 @@ bool	key_change_fov(int keycode, t_camera *camera)
 		{
 			camera->fov += 5;
 		}
-		return (true);
+		return (camera->fov_f = tan(camera->fov / 2 * M_PI / 180));
 	}
 	else if (keycode == XK_period)
 	{
@@ -121,7 +120,7 @@ bool	key_change_fov(int keycode, t_camera *camera)
 		{
 			camera->fov -= 5;
 		}
-		return (true);
+		return (camera->fov_f = tan(camera->fov / 2 * M_PI / 180));
 	}
 	return (false);
 }

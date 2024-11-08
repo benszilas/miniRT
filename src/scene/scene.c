@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:30 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/04 10:44:22 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:27:24 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -226,10 +226,10 @@ void	scene_create(const char *filepath, t_scene *scene)
 	scene->body = ft_calloc(MAX_BODY_INIT, sizeof(*scene->body));
 	lst_memory(scene->body, free, ADD);
 	scene->texture[0] = ppm_image_read("./assets/earth.ppm");
-	scene->texture[1] = ppm_image_read("./assets/sky.ppm");
+	scene->texture[SKYSPHERE] = ppm_image_read("./assets/sky.ppm");
 	ft_open(&fd, filepath, O_CREAT | O_RDWR, 0644);
 	scene_create_loop(scene, line, fd);
 	ft_close(fd);
-	scene->resolution_x = SCENE_START_RESOLUTION_X;
-	scene->resolution_y = SCENE_START_RESOLUTION_Y;
+	scene->resolution_x = 1;
+	scene->resolution_y = 1;
 }

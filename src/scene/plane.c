@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 20:27:02 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 22:01:11 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 22:02:19 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,6 +157,8 @@ void	trace_plane(t_pixel *pixel, t_vector ray, \
 	dist = plane_hit_distance(plane, scene->camera.position, ray, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
+		pixel->id = body->id;
+		pixel->dist = dist;
 		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
 		if (flip)
 			plane.normal = plane.inverse_normal;
@@ -166,7 +168,5 @@ void	trace_plane(t_pixel *pixel, t_vector ray, \
 			trace_reflection(pixel, hit, *scene);
 		else
 			trace_lights(scene, pixel, hit);
-		pixel->id = body->id;
-		pixel->dist = dist;
 	}
 }

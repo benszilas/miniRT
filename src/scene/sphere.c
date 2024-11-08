@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 17:52:32 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 21:47:46 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 21:45:14 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,11 +136,6 @@ void	get_color_sphere(	t_body *body, \
 		get_color_texture_sphere(u, v, body->texture, pixel);
 }
 
-void	apply_shadow_bias(t_vector *p, t_vector normal, double scale)
-{
-	*p = add_vector(*p, scale_vector(normal, SHADOW_BIAS * scale));	
-}
-
 void	pixel_sphere_set(t_pixel *pixel, t_vector ray, \
 							t_body *body, t_scene *scene)
 {
@@ -154,6 +149,8 @@ void	pixel_sphere_set(t_pixel *pixel, t_vector ray, \
 								scene->camera.position), body->sphere, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
+		pixel->dist = dist;
+		pixel->id = body->id;
 		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
 		calc_hit_point_vectors(&hit, ray, \
 		scale_vector(get_normal(hit.p, body->sphere.center), flip));
@@ -163,7 +160,5 @@ void	pixel_sphere_set(t_pixel *pixel, t_vector ray, \
 			trace_reflection(pixel, hit, *scene);
 		else
 			trace_lights(scene, pixel, hit);
-		pixel->dist = dist;
-		pixel->id = body->id;
 	}
 }

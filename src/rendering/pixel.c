@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:44:38 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 19:32:02 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 04:07:51 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ void	trace_lights(t_scene *sc, t_pixel *px, t_hit_point hit)
 		if (!shadow(hit.p, sc->light[i], sc->body, sc))
 		{
 			color_from_lights = add_color(color_from_lights, \
-			phong_reflection(*(uint *)px->color, \
+			phong_reflection(*px->color, \
 			dot_product(hit.n, sc->light[i].ray), sc->light[i], 1));
 			if (sc->gloss)
 				color_from_lights = add_color(color_from_lights, \
@@ -105,7 +105,7 @@ void	trace_lights(t_scene *sc, t_pixel *px, t_hit_point hit)
 		}
 		i++;
 	}
-	color_from_ambient = get_color(*(uint *)px->color, sc->ambient.color, 1);
+	color_from_ambient = get_color(*px->color, sc->ambient.color, 1);
 	*px->color = add_color(color_from_lights, color_from_ambient);
 	pixel_fill(px, sc);
 }

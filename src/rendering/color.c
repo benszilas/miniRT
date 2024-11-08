@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 13:42:14 by victor            #+#    #+#             */
-/*   Updated: 2024/11/03 19:39:23 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 03:33:20 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,36 +67,6 @@ uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
 	else if (final_color < 0)
 		final_color = 0;
 	return (final_color);
-}
-
-void	get_color_reflect(t_vector new_center, t_vector normal, \
-						t_scene *scene, t_pixel *pixel)
-{
-	/*uint		j;*/
-	/*t_body		*body;*/
-	/*uint		color;*/
-	/*t_vector	ray_reflect;*/
-	/*t_vector	campos_store;*/
-	/*t_vector	light_direction;*/
-	/**/
-	/*j = 0;*/
-	/*body = scene->body;*/
-	/*color = *pixel->color;*/
-	/*light_direction = vector_subtract(new_center, scene->light.position);*/
-	/*light_direction = vector_subtract(new_center, scene->light.position);*/
-	/*normalize_vector(&light_direction);*/
-	/*ray_reflect = reflect_vector(light_direction, normal);*/
-	/*campos_store = scene->camera.position;*/
-	/*scene->camera.position = new_center;*/
-	/*while (body[j].type != BODY_END && j < scene->body_cursor)*/
-	/*{*/
-	/*	if (body[j].type == BODY_SPHERE)*/
-	/*		pixel_sphere_set(pixel, ray_reflect, &body[j], scene);*/
-	/*	j++;*/
-	/*}*/
-	/*if (*pixel->color != color)*/
-	/*	*pixel->color = get_color(color, *pixel->color, 0.7);*/
-	/*scene->camera.position = campos_store;*/
 }
 
 float	dropoff_factor(float distance)

@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/17 11:13:10 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 21:50:45 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 22:02:46 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -252,6 +252,8 @@ void	trace_cyl(t_pixel *pixel, t_vector ray, t_body *body, t_scene *sc)
 	dist = cyl_hit_distance(&cy, ray, sc->camera.position, &flip);
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
+		pixel->id = body->id;
+		pixel->dist = dist;
 		hit.p = add_vector(sc->camera.position, scale_vector(ray, dist));
 		calc_hit_point_vectors(&hit, ray, cyl_normal(cy, hit.p, flip));
 		get_color_cylinder(body, hit.p, pixel);
@@ -259,7 +261,5 @@ void	trace_cyl(t_pixel *pixel, t_vector ray, t_body *body, t_scene *sc)
 			trace_reflection(pixel, hit, *sc);
 		else
 			trace_lights(sc, pixel, hit);
-		pixel->id = body->id;
-		pixel->dist = dist;
 	}
 }

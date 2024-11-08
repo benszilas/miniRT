@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:41:36 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 19:05:04 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 03:33:52 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ bool	parse_camera(	char *entry, \
 		.normal.x = ft_atod(params[3]), .normal.y = ft_atoi(params[4]), \
 		.normal.z = ft_atoi(params[5]),	.fov = ft_atoi(params[6])};
 	normalize_vector(&camera->normal);
+	camera->fov_f = tan(camera->fov / 2 * M_PI / 180);
 	return (was_parsed = true);
 }
 
@@ -60,8 +61,8 @@ void	calc_camera_tilt(t_camera *camera)
 	camera->right = \
 	(t_vector){.x = camera->normal.x, .y = 0, .z = camera->normal.z};
 	normalize_vector(&camera->right);
-	camera->tilt = acos(dot_product(camera->normal, camera->right)) * \
-	RAD_TO_DEG * (signbit(camera->normal.y) * 2 - 1);
+	camera->tilt = acos(dot_product(camera->normal, camera->right) - \
+	SHADOW_BIAS) * RAD_TO_DEG * ((signbit(camera->normal.y) * 2 - 1));
 }
 
 void	set_world_matrix(t_camera *camera)
@@ -90,63 +91,74 @@ void	ray_to_world(t_vector *ray, t_camera *camera)
 	*ray = vec_by_matrix(*ray, camera->to_world);
 }
 
-void	define_camera_rays(	t_pixel *pixel, \
-							t_camera *camera, \
-							t_scene *scene)
+void	set_ray(t_vector *ray, float x, float y, t_scene *scene, t_camera *camera)
 {
-	double		aspect_ratio;
-	uint		x;
-	uint		y;
-	double		fov;
-	t_vector	ray;
-
-	y = 0;
-	aspect_ratio = (double)WI / (double)HI;
-	fov = tan(camera->fov / 2 * M_PI / 180);
-	set_world_matrix(camera);
-	while (y < HI)
-	{
-		x = 0;
-		while (x <= WI - scene->resolution_x)
-		{
-			ray.x = ((2 * (x + 0.5) / WI - 1) * fov * aspect_ratio);
-			ray.y = ((1 - 2 * (y + 0.5) / HI) * fov);
-			ray.z = 1;
-			ray_to_world(&ray, camera);
-			/*ray_check_bodys(&pixel[y * WI + x], ray, scene,);*/
-			x += scene->resolution_x;
-		}
-		y += scene->resolution_y;
-	}
+	ray->x = ((2 * x / WI - 1) * camera->fov_f * ASPECT_RATIO);
+	ray->y = ((1 - 2 * y / HI) * camera->fov_f);
+	ray->z = 1;
+	ray_to_world(ray, camera);
+	scene->depth = 0;
 }
 
-void	thread_define_camera_rays(	t_thread *thread, \
-									t_pixel *pixel, \
-									t_scene *scene, \
-									t_camera *camera)
+float	aa_x(uint x, uint i)
 {
-	double		aspect_ratio;
+	return (x + (i % SQRT_AA_FACTOR) * REC_SQRT_AA_FACTOR);
+}
+
+float	aa_y(uint y, uint i)
+{
+	return (y + (i / SQRT_AA_FACTOR) * REC_SQRT_AA_FACTOR);
+}
+
+void	average_color(t_pixel *pixel, uint *color, uint anti_aliasing)
+{
+	uint	i;
+	int		r;
+	int		g;
+	int		b;
+
+	if (!anti_aliasing)
+		return ;
+	r = color[0] >> 16 & 0xFF;
+	g = color[0] >> 8 & 0xFF;
+	b = color[0] & 0xFF;
+	i = 1;
+	while (i < anti_aliasing)
+	{
+		r += color[i] >> 16 & 0xFF;
+		g += color[i] >> 8 & 0xFF;
+		b += color[i] & 0xFF;
+		i++;
+	}
+	*pixel->color = \
+	set_color(r / anti_aliasing, g / anti_aliasing, b / anti_aliasing);
+}
+
+void	thread_define_camera_rays(t_thread *thread, t_pixel *pixel, \
+		t_scene *scene, t_camera *camera)
+{
 	uint		x;
 	uint		y;
-	double		fov;
+	uint		i;
 	t_vector	ray;
+	uint		color[ANTI_ALIASING_FACTOR];
 
 	y = thread->starty;
-	aspect_ratio = (double)WI / (double)HI;
-	fov = tan(camera->fov / 2 * M_PI / 180);
 	set_world_matrix(camera);
 	while (y < thread->starty + THREAD_HEIGHT)
 	{
 		x = 0;
 		while (x < WI)
 		{
-			ray.x = ((2 * (x + 0.5) / WI - 1) * fov * aspect_ratio);
-			ray.y = ((1 - 2 * (y + 0.5) / HI) * fov);
-			ray.z = 1;
-			pixels_clear(&pixel[y * WI + x], scene->resolution_x, scene->resolution_y);
-			ray_to_world(&ray, camera);
-			thread->scene.depth = 0;
-			ray_check_bodys(&pixel[y * WI + x], ray, &thread->scene);
+			i = 0;
+			while (i < scene->anti_aliasing + 1)
+			{
+				set_ray(&ray, aa_x(x, i), aa_y(y, i), scene, camera);
+				pixels_clear(&pixel[y * WI + x], scene->resolution_x, scene->resolution_y);
+				ray_check_bodys(&pixel[y * WI + x], ray, scene);
+				color[i++] = *pixel[y * WI + x].color;
+			}
+			average_color(&pixel[y * WI + x], color, scene->anti_aliasing);
 			x += scene->resolution_x;
 		}
 		y += scene->resolution_y;

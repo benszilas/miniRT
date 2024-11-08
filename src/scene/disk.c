@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 14:26:27 by bszilas           #+#    #+#             */
-/*   Updated: 2024/11/03 21:47:07 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/06 22:02:39 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -158,6 +158,8 @@ void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
 		hit.p = add_vector(scene->camera.position, scale_vector(ray, dist));
+		pixel->id = body->id;
+		pixel->dist = dist;
 		if (flip)
 			disk.normal = disk.inverse_normal;
 		calc_hit_point_vectors(&hit, ray, disk.normal);
@@ -166,7 +168,5 @@ void	trace_disk(t_pixel *pixel, t_vector ray, t_body *body, t_scene *scene)
 			trace_reflection(pixel, hit, *scene);
 		else
 			trace_lights(scene, pixel, hit);	
-		pixel->id = body->id;
-		pixel->dist = dist;
 	}
 }

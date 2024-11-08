@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:16 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/03 21:32:07 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 06:23:36 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,9 @@
 
 void	pixel_fill(t_pixel *pixel, t_scene *scene)
 {
-	uint		i;
-	uint		j;
-	t_pixel		pixel_new;
+	uint	i;
+	uint	j;
+	t_pixel	pixel_new;
 
 	i = 0;
 	pixel_new = *pixel;
@@ -34,24 +34,41 @@ void	pixel_fill(t_pixel *pixel, t_scene *scene)
 	}
 }
 
-uint	get_background_color(t_scene *sc)
+void	get_background_color(t_scene *sc, t_pixel *px, t_vector v)
 {
-	return (0); //we can add different backgrounds later to make mirrors look better
+	t_body	skysphere;
+
+	if (sc->sky_sphere && sc->texture + SKYSPHERE)
+	{
+		ft_bzero(&skysphere, sizeof(t_body));
+		skysphere.textured = true;
+		skysphere.texture = sc->texture + SKYSPHERE;
+		skysphere.sphere.radius = 1;
+		get_color_sphere(&skysphere, v, px);
+	}
+	else
+		*px->color = get_color(sc->ambient.color, 0xFFFFFF, sc->ambient.intensity);
 }
 
 void	trace_reflection(t_pixel *pixel, t_hit_point hit, t_scene new_scene)
 {
 	uint	i;
+	uint	mirror_id;
+	double	mirror_dist;
 
 	i = 0;
 	while (i < new_scene.light_count)
 		new_scene.light[i++].intensity *= 0.9;
 	new_scene.camera.position = hit.p;
 	new_scene.depth += 1;
+	mirror_id = pixel->id;
+	mirror_dist = pixel->dist;
 	pixel->dist = -1;
 	ray_check_bodys(pixel, hit.r, &new_scene);
+	pixel->id = mirror_id;
 	if (pixel->dist == -1)
-		*pixel->color = get_background_color(&new_scene);
+		get_background_color(&new_scene, pixel, hit.r);
+	pixel->dist = mirror_dist;
 }
 
 void	ray_check_bodys(t_pixel *pixel, t_vector ray, t_scene *scene)
@@ -76,6 +93,11 @@ void	ray_check_bodys(t_pixel *pixel, t_vector ray, t_scene *scene)
 			trace_cone(pixel, ray, body + j, scene);
 		j++;
 	}
+	if (!pixel->id)
+	{
+		get_background_color(scene, pixel, ray);
+		pixel_fill(pixel, scene);
+	}
 }
 
 int	time_value_substract(	struct timeval time_minuend, \
@@ -93,31 +115,16 @@ int	time_value_substract(	struct timeval time_minuend, \
 
 uint	rendering_loop(t_data *data)
 {
-	pthread_mutex_lock(&data->mutex);
-	thread_scene_update(data);
-	data->go = true;
-	pthread_cond_broadcast(&data->cond);
-	pthread_mutex_unlock(&data->mutex);
+	/*unblock threads so they can lock read*/
+	pthread_rwlock_unlock(&data->rwlock);
+	/*synchronize until all threads lock read*/
 	pthread_barrier_wait(&data->barrier);
-	pthread_mutex_lock(&data->mutex);
-	data->go = false;
-	if (data->func_ptr)
-		data->func_ptr(data, data->param);
+	/*block until threads make the image and release all read locks*/
+	pthread_rwlock_wrlock(&data->rwlock);
+	/*tell threads they can now wait for read locks*/
+	pthread_barrier_wait(&data->barrier);
+	help_menu_draw(data, NULL);
 	mlx_put_image_to_window(data->mlx, data->win, &data->image, 0, 0);
 	mlx_do_sync(data->mlx);
-	pthread_mutex_unlock(&data->mutex);
 	return (0);
 }
-
-/*uint	rendering_loop(t_data *data)*/
-/*{*/
-/*	define_camera_rays(data->pixel, &data->scene.camera, &data->scene);*/
-/*	if (data->func_ptr)*/
-/*	{*/
-/*		data->func_ptr(data, data->param);*/
-/*	}*/
-/*	mlx_put_image_to_window(data->mlx, data->win, &data->image, 0, 0);*/
-/*	mlx_do_sync(data->mlx);*/
-/*	pixels_clear(data->pixel);*/
-/*	return (0);*/
-/*}*/

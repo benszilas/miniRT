@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 10:54:59 by bszilas           #+#    #+#             */
-/*   Updated: 2024/11/03 22:04:32 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:22:46 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,7 @@ bool	parse_cone(char *entry, uint line_count, t_body *body, uint body_count)
 	.radius = ft_atod(params[6]) / 2, .height = ft_atod(params[7]),
 	};
 	body->color = parse_body_color(params + 8, &error);
-	body->id = id_set(ID_GROUP_CYLINDER, body_count);
+	body->id = id_set(ID_GROUP_CONE, body_count);
 	if (error || body->cone.radius <= 0 || body->cone.height <= 0)
 		return (err("cone", line_count), lst_memory(NULL, NULL, FAIL), false);
 	calc_cone_data(&body->cone);
@@ -153,14 +153,14 @@ void	trace_cone(t_pixel *pixel, t_vector ray, t_body *body, t_scene *sc)
 	if (dist > SHADOW_BIAS && (dist < pixel->dist || pixel->dist < 0))
 	{
 		*pixel->color = body->color;
+		pixel->id = body->id;
+		pixel->dist = dist;
 		hit.p = add_vector(sc->camera.position, scale_vector(ray, dist));
 		calc_hit_point_vectors(&hit, ray, cone_surface_normal(cn, hit.p, flip));
 		if (body->reflect && sc->depth < MAX_DEPTH)
 			trace_reflection(pixel, hit, *sc);
 		else
 			trace_lights(sc, pixel, hit);
-		pixel->id = body->id;
-		pixel->dist = dist;
 	}
 	trace_cone_bottom(pixel, ray, body, sc);
 }

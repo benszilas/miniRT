@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:33:29 by victor            #+#    #+#             */
-/*   Updated: 2024/11/04 10:58:19 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:40:36 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,14 @@ void	data_destroy_func(void *data_ptr)
 	mlx_destroy_window(data->mlx, data->win);
 	mlx_destroy_display(data->mlx);
 	ft_free(&data->mlx);
+
+	/*this makes threads break the loop asa they lock read and check condition*/
+	data->go = false;
+	pthread_rwlock_unlock(&data->rwlock);
+	while (data->thread_count--)
+		pthread_join(data->threads[data->thread_count].thread, NULL);
+	pthread_barrier_destroy(&data->barrier);
+	pthread_rwlock_destroy(&data->rwlock);
 }
 
 t_container	*menus_create(t_data *data)
@@ -83,18 +91,14 @@ void	initialize_data(t_data *data, char *path)
 	data->scene.pixel = data->pixel;
 	data->image = image_create(data->mlx, WI, HI);
 	data->menu = menus_create(data);
-	data->scene.light_focus = 0;
-	data->scene.body_focus = NULL;
 	pixels_image_syncronize(&data->image, data->pixel);
 }
 
 int	main(int argc, char **argv)
 {
-	t_data	data;
-	char	*path;
+	t_data		data;
+	char		*path;
 	t_thread	thread[THREAD_COUNT];
-	t_scene		scene[THREAD_COUNT];
-
 
 	if (argc == 1)
 		path = "scenes/multilight.rt";
@@ -107,11 +111,10 @@ int	main(int argc, char **argv)
 	lst_memory(&data, data_destroy_func, ADD);
 	threads_init(thread, &data);
 	data.threads = thread;
-	rendering_loop(&data);
-	mlx_hook(data.win, 2, (1L << 0), key_press, &data);
+	mlx_hook(data.win, KeyPress, KeyPressMask, key_press, &data);
 	mlx_mouse_hook(data.win, mouse_press, &data);
-	mlx_hook(data.win, 6, 1L << 6, mouse_move, &data);
-	mlx_hook(data.win, 5, 1L << 3, mouse_release, &data);
+	mlx_hook(data.win, MotionNotify, PointerMotionMask, mouse_move, &data);
+	mlx_hook(data.win, ButtonRelease, ButtonReleaseMask, mouse_release, &data);
 	mlx_hook(data.win, DestroyNotify, ButtonPressMask, &close_window, &data);
 	mlx_loop(data.mlx);
 	return (0);

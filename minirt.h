@@ -6,14 +6,14 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:34:08 by victor            #+#    #+#             */
-/*   Updated: 2024/11/03 22:10:40 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:39:28 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef MINIRT_H
 # define MINIRT_H
 
-# include <mlx.h> 
+# include "minilibx-linux/mlx.h" 
 # include "mlx_int.h"
 # include <unistd.h>
 # include <math.h>
@@ -41,6 +41,7 @@
 # define MAX_BODY_INIT 16
 # define READ_BUFFER_SIZE 2048
 
+# define ASPECT_RATIO 1.77777778
 # define SCENE_START_RESOLUTION_X 16
 # define SCENE_START_RESOLUTION_Y 9
 
@@ -51,7 +52,11 @@
 # define THREAD_COUNT 30
 # define THREAD_HEIGHT 36
 
-# define MAX_DEPTH 3
+# define MAX_DEPTH 6
+
+# define ANTI_ALIASING_FACTOR 9
+# define SQRT_AA_FACTOR 3
+# define REC_SQRT_AA_FACTOR 0.33333333333
 
 # define DROPOFF_DISTANCE 5
 # define SHADOW_BIAS 1e-5
@@ -59,6 +64,10 @@
 # define COS_10 0.98480775301
 # define SIN_10 0.17364817766
 # define RAD_TO_DEG 57.2957795131
+
+# define INDEX_OF_SKYSPHERE_IMAGE 1
+# define SKYSPHERE INDEX_OF_SKYSPHERE_IMAGE
+# define SKY_COLOR 0x83E8FC
 
 # define MAIN_MENU 0x00beef00
 # define ITEM_HEIGHT 30
@@ -193,7 +202,7 @@ typedef struct s_pixel
 {
 	uint	id;
 	double	dist;
-	int		*color;
+	uint	*color;
 }	t_pixel;
 
 typedef struct s_line
@@ -297,6 +306,7 @@ typedef struct s_camera
 	t_matrix4	to_world;
 	double		tilt;
 	double		fov;
+	double		fov_f;
 }	t_camera;
 
 typedef struct s_scene
@@ -305,6 +315,7 @@ typedef struct s_scene
 	uint			body_cursor;
 	uint			resolution_x;
 	uint			resolution_y;
+	uint			anti_aliasing;
 	uint			light_count;
 	t_light			light[4];
 	t_light			ambient;
@@ -312,6 +323,7 @@ typedef struct s_scene
 	uint			light_focus;
 	bool			gloss;
 	uint			depth;
+	bool			sky_sphere;
 	t_body			*body_focus;
 	t_pixel			*pixel;
 	t_body			*body;
@@ -331,25 +343,24 @@ typedef struct s_data
 	void				*param;
 	void				(*func_ptr)(void *, void *);
 	struct s_thread		*threads;
-	pthread_mutex_t		mutex;
-	pthread_cond_t		cond;
+	int					thread_count;
 	pthread_barrier_t	barrier;
+	pthread_rwlock_t	rwlock;
 	bool				go;
 }	t_data;
 
 typedef struct s_thread
 {
-	int				id;
-	pthread_t		thread;
-	t_data			*data;
-	t_scene			scene;
-	t_camera		*camera;
-	t_pixel			*pixel;
-	pthread_mutex_t	*mutex;
-	uint			width;
-	uint			height;
-	uint			startx;
-	uint			starty;
+	int					id;
+	pthread_t			thread;
+	t_data				*data;
+	t_scene				*scene;
+	t_pixel				*pixel;
+	pthread_rwlock_t	*rwlock;
+	uint				width;
+	uint				height;
+	uint				startx;
+	uint				starty;
 }	t_thread;
 
 /* ft_atod.c */
@@ -365,6 +376,7 @@ void		glyph_print(uint begin_x, uint begin_y, \
 						char const *text, t_pixel *pixel);
 void		ft_putnbrf_fd(double f, int fd, int precision);
 void		data_destroy_func(void *data_ptr);
+long	get_current_us(struct timeval start);
 
 /* Drawing */
 void		rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color);
@@ -399,6 +411,7 @@ character at the END !!! */
 void		color_print(uint color, int fd);
 uint		add_color(uint color1, uint color2);
 uint		parse_body_color(char *params[], int *error);
+void		get_background_color(t_scene *sc, t_pixel *px, t_vector v);
 
 /* Sphere */
 bool		parse_sphere(char *entry, uint line_count, \
@@ -409,7 +422,9 @@ void		body_sphere_print(t_body *body);
 void		sphere_save(t_sphere sphere, uint color, int fd);
 double		sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 								t_sphere sphere, int *flip);
-
+void	get_color_sphere(	t_body *body, \
+							t_vector intersect, \
+							t_pixel *pixel);
 /* Plane */
 bool		parse_plane(char *entry, uint line_count, \
 						t_body *body, uint body_count);
@@ -606,7 +621,6 @@ t_texture	ppm_image_read(const char *path);
 void	data_init_threads(t_data *data);
 void	threads_init(t_thread thread[], t_data *data);
 void	*thread_rendering_loop(void *thread_ptr);
-void	thread_scene_update(t_data *data);
 void	thread_define_camera_rays(	t_thread *thread, \
 									t_pixel *pixel, \
 									t_scene *scene, \
