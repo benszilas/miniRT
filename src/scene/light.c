@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:55:30 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/05 11:44:19 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/10/21 13:24:30 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,11 +53,10 @@ bool	parse_ambient(char *entry_light, uint line_count, t_light *light)
 {
 	char	*params[4];
 	int		error;
-	bool	was_parsed;
+	bool	was_parsed = false;
 
 	ft_bzero(params, sizeof(params));
 	error = false;
-	was_parsed = false;
 	while (ft_isspace(*entry_light))
 		entry_light++;
 	if (!collect_param_single(&entry_light, params) \

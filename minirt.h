@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:34:08 by victor            #+#    #+#             */
-/*   Updated: 2024/11/06 12:09:37 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:39:28 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,7 @@
 # include <sys/time.h>
 # include <X11/XKBlib.h>
 # include <X11/extensions/XShm.h>
+# include <pthread.h>
 
 # ifndef WI
 #  define WI 1920
@@ -40,6 +41,7 @@
 # define MAX_BODY_INIT 16
 # define READ_BUFFER_SIZE 2048
 
+# define ASPECT_RATIO 1.77777778
 # define SCENE_START_RESOLUTION_X 16
 # define SCENE_START_RESOLUTION_Y 9
 
@@ -47,13 +49,25 @@
 
 # define CHECKER_GRID_SIZE 16
 
-# define THREAD_COUNT 32
+# define THREAD_COUNT 30
+# define THREAD_HEIGHT 36
+
+# define MAX_DEPTH 6
+
+# define ANTI_ALIASING_FACTOR 9
+# define SQRT_AA_FACTOR 3
+# define REC_SQRT_AA_FACTOR 0.33333333333
 
 # define DROPOFF_DISTANCE 5
 # define SHADOW_BIAS 1e-5
+# define GLOSSINESS 10
 # define COS_10 0.98480775301
 # define SIN_10 0.17364817766
 # define RAD_TO_DEG 57.2957795131
+
+# define INDEX_OF_SKYSPHERE_IMAGE 1
+# define SKYSPHERE INDEX_OF_SKYSPHERE_IMAGE
+# define SKY_COLOR 0x83E8FC
 
 # define MAIN_MENU 0x00beef00
 # define ITEM_HEIGHT 30
@@ -172,6 +186,18 @@ typedef struct s_vector
 	double	z;
 }	t_vector;
 
+/* p = the visible point on the object
+n = the object surface normal vector from that point
+v = the normal vector towards the viewer
+r = normalized perfect reflection of incoming light */
+typedef struct s_hit_point
+{
+	t_vector	p;
+	t_vector	n;
+	t_vector	v;
+	t_vector	r;
+}	t_hit_point;
+
 typedef struct s_pixel
 {
 	uint	id;
@@ -190,7 +216,6 @@ typedef struct s_sphere
 {
 	double		radius;
 	t_vector	center;
-	t_vector	normal;
 }	t_sphere;
 
 typedef struct s_plane
@@ -262,10 +287,11 @@ typedef struct s_body
 typedef struct s_light
 {
 	t_vector	position;
+	t_vector	ray;
+	float		phong;
 	float		obj_distance;
 	float		intensity;
 	uint		color;
-	t_vector	normal;
 }	t_light;
 
 typedef double	t_matrix4[4][4];
@@ -280,22 +306,29 @@ typedef struct s_camera
 	t_matrix4	to_world;
 	double		tilt;
 	double		fov;
+	double		fov_f;
 }	t_camera;
 
 typedef struct s_scene
 {
-	uint		current_body_max;
-	uint		body_cursor;
-	uint		resolution_x;
-	uint		resolution_y;
-	t_light		light;
-	t_light		ambient;
-	t_camera	camera;
-	t_vector	*focus;
-	t_body		*focus2;
-	t_pixel		*pixel;
-	t_body		*body;
-	t_texture	*texture;
+	uint			current_body_max;
+	uint			body_cursor;
+	uint			resolution_x;
+	uint			resolution_y;
+	uint			anti_aliasing;
+	uint			light_count;
+	t_light			light[4];
+	t_light			ambient;
+	t_camera		camera;
+	uint			light_focus;
+	bool			gloss;
+	uint			depth;
+	bool			sky_sphere;
+	t_body			*body_focus;
+	t_pixel			*pixel;
+	t_body			*body;
+	pthread_mutex_t	mutex;
+	t_texture		*texture;
 }	t_scene;
 
 typedef struct s_data
@@ -309,7 +342,26 @@ typedef struct s_data
 	t_container			*menu;
 	void				*param;
 	void				(*func_ptr)(void *, void *);
+	struct s_thread		*threads;
+	int					thread_count;
+	pthread_barrier_t	barrier;
+	pthread_rwlock_t	rwlock;
+	bool				go;
 }	t_data;
+
+typedef struct s_thread
+{
+	int					id;
+	pthread_t			thread;
+	t_data				*data;
+	t_scene				*scene;
+	t_pixel				*pixel;
+	pthread_rwlock_t	*rwlock;
+	uint				width;
+	uint				height;
+	uint				startx;
+	uint				starty;
+}	t_thread;
 
 /* ft_atod.c */
 double		ft_atod(char *n);
@@ -317,9 +369,6 @@ void		item_double_inc(void *value, void *null);
 void		item_double_dec(void *value, void *null);
 
 /* Utils */
-
-/* flag corresponds to O_RDONLY, O_CREAT etc.;
-When opening a file, permissions doesnt can be set to 0 */
 void		ft_open(int *fd, const char *path, int flag, int permissons);
 int			ft_close(int fd);
 int			ft_read(int fd, char *character, unsigned int size_to_read);
@@ -327,6 +376,7 @@ void		glyph_print(uint begin_x, uint begin_y, \
 						char const *text, t_pixel *pixel);
 void		ft_putnbrf_fd(double f, int fd, int precision);
 void		data_destroy_func(void *data_ptr);
+long	get_current_us(struct timeval start);
 
 /* Drawing */
 void		rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color);
@@ -345,8 +395,15 @@ void		err(char *body_type, uint line);
 uint		set_color(uint r, uint g, uint b);
 void		get_color_reflect(t_vector new_center, t_vector normal, \
 								t_scene *scene, t_pixel *pixel);
-double		get_color_attenuation(t_vector p, t_vector surface_n, \
-									t_light l, t_scene *sc);
+/* Returns diffuse color when called with parameters
+attn = dot product of surface normal and light ray,
+uint obj = object color and float gloss = 1.
+
+Returns specular reflection color when called with parameters
+attn = dot product of light ray reflection and view ray
+obj = 0xFFFFFF and float gloss greater than 1 */
+uint		phong_reflection(uint obj, float attn, t_light l, float gloss);
+void		apply_shadow_bias(t_vector *p, t_vector normal, double scale);
 uint		get_color(uint obj, uint light, double attn);
 uint		color_blend(uint	color1, uint color2);
 /* !!! This function PRINTS a SPACE at the BEGINNING and a NEWLINE
@@ -354,11 +411,7 @@ character at the END !!! */
 void		color_print(uint color, int fd);
 uint		add_color(uint color1, uint color2);
 uint		parse_body_color(char *params[], int *error);
-uint		mix_colors(uint base_color, uint reflected_color, \
-double reflectivity);
-t_vector	reflect_vector(t_vector v, t_vector n);
-bool		shadow_hit_distance(t_vector p, t_light l, t_body *body, \
-uint cursor);
+void		get_background_color(t_scene *sc, t_pixel *px, t_vector v);
 
 /* Sphere */
 bool		parse_sphere(char *entry, uint line_count, \
@@ -369,21 +422,18 @@ void		body_sphere_print(t_body *body);
 void		sphere_save(t_sphere sphere, uint color, int fd);
 double		sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 								t_sphere sphere, int *flip);
-void		get_color_checker_sphere(double u, double v, t_pixel *pixel);
-void		get_color_texture_sphere(double u, double v, t_texture *texture, \
-									t_pixel *pixel);
-
+void	get_color_sphere(	t_body *body, \
+							t_vector intersect, \
+							t_pixel *pixel);
 /* Plane */
 bool		parse_plane(char *entry, uint line_count, \
 						t_body *body, uint body_count);
 void		body_plane_print(t_body *body);
-void		pixel_plane_set(t_pixel *pixel, t_vector camera_ray, \
+void		trace_plane(t_pixel *pixel, t_vector camera_ray, \
 							t_body *body, t_scene *scene);
 void		plane_save(t_plane plane, uint color, int fd);
 bool		move_plane(int keycode, t_plane *plane);
-void		get_color_texture_plane(double u, double v, t_texture *texture, \
-			t_pixel *pixel);
-void		get_color_checker_plane(double u, double v, t_pixel *pixel);
+/* Dear FBI we mean the geometric kind of plane, not the flying vehicle. */
 double		plane_hit_distance(t_plane pl, t_vector cam, \
 								t_vector camera_ray, int *flip);
 
@@ -403,10 +453,7 @@ double		cyl_hit_distance(t_cylinder *cy, t_vector ray, \
 								t_vector cam, int *flip);
 double		cyl_components_shadow(t_cylinder cy, t_vector ray, t_vector p);
 bool		move_cylinder(int keycode, t_cylinder *cyl);
-t_vector	get_local(t_cylinder *cylinder, t_vector intersect);
-void		trace_cyl_caps(t_pixel *px, t_vector ray, t_body *cyl, t_scene *sc);
-double		solve_cyl_equation(t_cylinder *cy, t_vector ray, \
-							t_vector cam_delta, int *flip);
+t_vector	cyl_normal(t_cylinder cy, t_vector p, int flip);
 
 /* Disk */
 void		trace_disk(t_pixel *pixel, t_vector ray, \
@@ -417,11 +464,6 @@ double		disk_hit_distance(t_disk disk, t_vector ray, \
 						t_vector cam, int *flip);
 void		print_disk(t_body *body);
 bool		move_disk(int keycode, t_disk *disk);
-void		get_color_disk(t_body *body, t_vector intersect, \
-			t_pixel *pixel);
-void		get_color_checker_disk(double u, double v, t_pixel *pixel);
-void		get_color_texture_disk(double u, double v, t_texture *texture, \
-			t_pixel *pixel);
 
 /* Cone */
 bool		move_cone(int keycode, t_cone *cone);
@@ -440,7 +482,6 @@ t_scene *sc);
 void		trace_cone_bottom(t_pixel *px, t_vector ray, t_body *cone, \
 t_scene *sc);
 double		cone_components_shadow(t_cone cn, t_vector ray, t_vector p);
-bool		finite_cone_hit(double cone_height, double h);
 
 /* Image */
 t_img		image_create(void *mlx, uint width, uint height);
@@ -459,13 +500,12 @@ t_vector	cross_product(t_vector a, t_vector b);
 t_vector	rot_x(t_vector vec, int dir);
 t_vector	rot_y(t_vector vec, int dir);
 t_vector	rot_z(t_vector vec, int dir);
-t_vector	vec_by_matrix(t_vector vec, t_matrix4 m);
+t_vector	reflect_vector(t_vector incoming, t_vector axis);
+void		calc_hit_point_vectors(t_hit_point *hit, t_vector ray, t_vector n);
 
 /* Camera */
-void		ray_to_world(t_vector *ray, t_camera *camera);
 void		define_camera_rays(t_pixel *pixel, t_camera *camera, \
 								t_scene *scene);
-bool		key_rotate_cam(int key, t_scene *scene);
 void		set_world_matrix(t_camera *camera);
 /*camera->right in this function is used as cam normal projection onto the
 xz plane to save one less t_vector type */
@@ -473,24 +513,21 @@ void		calc_camera_tilt(t_camera *camera);
 bool		parse_camera(char *entry, uint line_count, t_camera *camera);
 void		body_camera_print(t_camera camera);
 void		camera_save(t_camera *camera, int fd);
-bool		cam_inside_cone(t_cone *cn, t_vector cam, double cam_h);
 
 /* Pixel */
 t_pixel		*pixel_plane_create(void);
 void		set_pixel_distances(t_pixel *array, uint size, double dist);
-void		pixels_clear(t_pixel *pixel);
-void		set_hit_pixel(t_scene *sc, t_pixel *px, double attn, double dist);
+void		pixels_clear(t_pixel *pixel, uint wi, uint hi);
+void		trace_lights(t_scene *sc, t_pixel *px, t_hit_point hit);
 void		pixel_clear_id(t_pixel *pixel);
 
 /* Ray Utils */
 double		ray_distance_from_point_squared(t_vector ray, t_vector point);
 double		smaller_non_negative(double a, double b);
-void		calc_object_space(t_vector surface_normal, t_vector *right, \
-			t_vector *up);
-void		apply_shadow_bias(t_vector *p, t_vector normal, double scale);
 
 /* Image */
 t_img		image_create(void *mlx_ptr, uint width, uint height);
+
 
 /* Scene */
 void		scene_print(t_scene *scene);
@@ -504,8 +541,8 @@ void		scene_add_plane_func(void *data_ptr, void *null);
 t_body		*body_get_by_id(int id, t_scene *scene);
 void		scene_save(t_scene *scene);
 void		pixels_image_syncronize(t_img *image, t_pixel *pixel);
-bool		body_distribute(char *entry, char *tmp, \
-			uint line_cursor, t_scene *scene);
+void		trace_reflection(t_pixel *px, t_hit_point hit, t_scene new_scene);
+
 /* Rendering */
 uint		rendering_loop(t_data *data);
 void		pixel_fill(t_pixel *pixel, t_scene *scene);
@@ -516,6 +553,8 @@ bool		parse_light(char *entry_light, uint line_count, t_light *light);
 void		body_light_print(t_light light);
 void		light_save(t_light light, int fd);
 bool		parse_ambient(char *entry_light, uint line_count, t_light *light);
+bool		shadow(t_vector p, t_light l, t_body *body, \
+t_scene *scene);
 
 /* Keys */
 int			key_press(int keycode, void *data);
@@ -526,7 +565,6 @@ bool		key_rotate_cam(int key, t_scene *scene);
 int			move_body(int keycode, t_body *body);
 bool		key_move_light(int keycode, t_scene *scene);
 uint		key_misc_function(int keycode, t_scene *scene, t_data *data);
-bool		decrease_resolution(t_scene *scene);
 
 /* Menu */
 void		container_draw(void *menu, void *pixel);
@@ -536,7 +574,7 @@ t_container	container_create(const char *title, t_rect *attr, uint format);
 void		container_item_add(t_container *container, t_item *item);
 t_item		container_item_create(const char *title, void *param, \
 									void (*func_ptr)(void *, void *));
-void		container_item_draw(t_item *item, t_pixel *pixel);
+
 void		disk_menu_map(t_container *menu, t_body *body, uint *color);
 void		sphere_menu_map(t_container *menu, t_body *body, uint *color);
 void		cylinder_menu_map(t_container *menu, t_body *body, uint *color);
@@ -549,29 +587,16 @@ void		menu_body_colors_add(t_container *menu);
 void		menu_body_vector_position_add(t_container *menu);
 void		menu_body_vector_normal_add(t_container *menu);
 void		menu_body_float_add(t_container *menu, char *name_prefix);
-void		menu_body_bool_add(t_container *menu, char *name);
 void		cylinder_menu_create(t_container *menu);
 void		cone_menu_create(t_container *menu);
 void		disc_menu_create(t_container *menu);
 void		sphere_menu_create(t_container *menu);
 void		plane_menu_create(t_container *menu);
-void		menu_body_map_bool_toggle(t_item *item, bool *value);
-void		item_normal_inc(void *null, void *value);
-void		item_normal_dec(void *null, void *value);
-void		item_double_inc(void *null, void *value);
-void		item_double_dec(void *null, void *value);
-void		item_bool_toggle(void *null, void *value);
-void		color_dec(void *null, void *color);
-void		color_inc(void *null, void *color);
 
 /* Mouse */
 int			mouse_press(int button, int x, int y, t_data *data);
 int			mouse_release(int button, int x, int y, t_data *data);
 int			mouse_move(int x, int y, t_data *data);
-void		move_grabbed_object(t_body *grabbed, double dx, double dy);
-void		mouse_click_left(int x, int y, t_scene *scene, t_mouse *mouse);
-void		mouse_click_right(int x, int y, t_data *data, t_mouse *mouse);
-void		mouse_scroll(int button, t_scene *scene, t_mouse *mouse);
 
 /* Parsing */
 char		temporary_terminate_string(char *end);
@@ -589,7 +614,15 @@ int64_t		set_signed_int(const char *str, int64_t min, \
 /* PPM READER */
 bool		ppm_check(int fd, int *width, int *height);
 void		ppm_pixels_read(int fd, t_texture *texture);
-int			ppm_read_number(int fd, bool *eof, uint	i);
+int			ppm_read_number(int fd, bool *eof);
 t_texture	ppm_image_read(const char *path);
 
+/* Threads */
+void	data_init_threads(t_data *data);
+void	threads_init(t_thread thread[], t_data *data);
+void	*thread_rendering_loop(void *thread_ptr);
+void	thread_define_camera_rays(	t_thread *thread, \
+									t_pixel *pixel, \
+									t_scene *scene, \
+									t_camera *camera);
 #endif

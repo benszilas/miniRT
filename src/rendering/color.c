@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 13:42:14 by victor            #+#    #+#             */
-/*   Updated: 2024/11/05 10:44:42 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 03:33:20 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,65 @@ void	color_print(uint color, int fd)
 {
 	ft_fprintf(fd, " %u,%u,%u\n", (color >> 16) & 0xff, \
 			(color >> 8) & 0xff, color & 0xff);
+}
+
+bool	shadow(t_vector p, t_light l, t_body *body, t_scene *scene)
+{
+	uint	j;
+	double	shadow;
+	int		misc;
+
+	j = 0;
+	shadow = -1;
+	while (body[j].type != BODY_END && j < scene->body_cursor \
+	&& (shadow < SHADOW_BIAS || shadow > l.obj_distance + SHADOW_BIAS))
+	{
+		if (body[j].type == BODY_SPHERE)
+			shadow = sphere_hit_distance(l.ray, vector_subtract(\
+						body[j].sphere.center, p), body[j].sphere, &misc);
+		else if (body[j].type == BODY_PLANE)
+			shadow = plane_hit_distance(body[j].plane, p, l.ray, &misc);
+		else if (body[j].type == BODY_CYLINDER)
+			shadow = cyl_components_shadow(body[j].cylinder, l.ray, p);
+		else if (body[j].type == BODY_DISK)
+			shadow = disk_hit_distance(body[j].disk, l.ray, p, &misc);
+		else if (body[j].type == BODY_CONE)
+			shadow = cone_components_shadow(body[j].cone, l.ray, p);
+		j++;
+	}
+	if ((shadow < SHADOW_BIAS || shadow > l.obj_distance + SHADOW_BIAS))
+		return (false);
+	return (true);
+}
+
+uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
+{
+	int	final_color;
+
+	final_color = ((uint)((1.0 - reflectivity) * ((base_color >> 16) & 0xFF) \
+					+ reflectivity * ((reflected_color >> 16) & 0xFF)) << 16) \
+					| ((uint)((1.0 - reflectivity) * ((base_color >> 8) & 0xFF) \
+					+ reflectivity * ((reflected_color >> 8) & 0xFF)) << 8) \
+					| (uint)((1.0 - reflectivity) * (base_color & 0xFF) \
+					+ reflectivity * (reflected_color & 0xFF));
+	if (final_color > 0xffffff)
+		final_color = 0xffffff;
+	else if (final_color < 0)
+		final_color = 0;
+	return (final_color);
+}
+
+float	dropoff_factor(float distance)
+{
+	return (1 / pow((distance + DROPOFF_DISTANCE) / DROPOFF_DISTANCE, 2));
+}
+
+uint	phong_reflection(uint obj, float attenuation, t_light l, float gloss)
+{
+	if (attenuation <= 0 || gloss == 0)
+		return (0);
+	attenuation *= l.intensity * dropoff_factor((1 / gloss) * l.obj_distance);
+	return (get_color(obj, l.color, pow(attenuation, gloss)));
 }
 
 uint	get_color(uint obj, uint light, double attn)

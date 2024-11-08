@@ -6,11 +6,12 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:33:29 by victor            #+#    #+#             */
-/*   Updated: 2024/11/06 12:09:57 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:40:36 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../minirt.h"
+#include <mlx.h>
 
 int	close_window(void *data_ptr)
 {
@@ -27,6 +28,14 @@ void	data_destroy_func(void *data_ptr)
 	mlx_destroy_window(data->mlx, data->win);
 	mlx_destroy_display(data->mlx);
 	ft_free(&data->mlx);
+
+	/*this makes threads break the loop asa they lock read and check condition*/
+	data->go = false;
+	pthread_rwlock_unlock(&data->rwlock);
+	while (data->thread_count--)
+		pthread_join(data->threads[data->thread_count].thread, NULL);
+	pthread_barrier_destroy(&data->barrier);
+	pthread_rwlock_destroy(&data->rwlock);
 }
 
 t_container	*menus_create(t_data *data)
@@ -63,7 +72,10 @@ void	initialize_data(t_data *data, char *path)
 	ft_bzero(data, sizeof(*data));
 	data->mlx = mlx_init();
 	if (!data->mlx)
-		return (ft_putendl_fd("Failed to initialize mlx", 2), exit(1));
+	{
+		ft_putendl_fd("Failed to initialize mlx", 2);
+		exit (1);
+	}
 	data->win = mlx_new_window(data->mlx, WI, HI, "MiniRT");
 	if (!data->win)
 	{
@@ -72,7 +84,6 @@ void	initialize_data(t_data *data, char *path)
 		ft_free(data->mlx);
 		exit (1);
 	}
-	lst_memory(data, data_destroy_func, ADD);
 	data->pixel = pixel_plane_create();
 	data->func_ptr = help_menu_draw;
 	data->mouse.data = data;
@@ -80,30 +91,30 @@ void	initialize_data(t_data *data, char *path)
 	data->scene.pixel = data->pixel;
 	data->image = image_create(data->mlx, WI, HI);
 	data->menu = menus_create(data);
-	data->scene.focus = &data->scene.camera.position;
-	data->scene.focus2 = NULL;
 	pixels_image_syncronize(&data->image, data->pixel);
-	pixels_image_syncronize(&data->image, data->scene.pixel);
 }
 
 int	main(int argc, char **argv)
 {
-	t_data	data;
-	char	*path;
+	t_data		data;
+	char		*path;
+	t_thread	thread[THREAD_COUNT];
 
 	if (argc == 1)
-		path = "scenes/basic_1.rt";
+		path = "scenes/multilight.rt";
 	else if (argc == 2 && ft_strlen(argv[1]) > 3 \
 			&& ft_strncmp(&argv[1][ft_strlen(argv[1]) - 3], ".rt\0", 4) == 0)
 		path = argv[1];
 	else
-		return (ft_putendl_fd("Invalid arguments", 2), 1);
+		return (ft_fprintf(STDERR_FILENO, "Invalid Argument to Program!\nExiting...\n"));
 	initialize_data(&data, path);
-	rendering_loop(&data);
-	mlx_hook(data.win, 2, (1L << 0), key_press, &data);
+	lst_memory(&data, data_destroy_func, ADD);
+	threads_init(thread, &data);
+	data.threads = thread;
+	mlx_hook(data.win, KeyPress, KeyPressMask, key_press, &data);
 	mlx_mouse_hook(data.win, mouse_press, &data);
-	mlx_hook(data.win, 6, 1L << 6, mouse_move, &data);
-	mlx_hook(data.win, 5, 1L << 3, mouse_release, &data);
+	mlx_hook(data.win, MotionNotify, PointerMotionMask, mouse_move, &data);
+	mlx_hook(data.win, ButtonRelease, ButtonReleaseMask, mouse_release, &data);
 	mlx_hook(data.win, DestroyNotify, ButtonPressMask, &close_window, &data);
 	mlx_loop(data.mlx);
 	return (0);

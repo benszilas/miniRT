@@ -35,7 +35,7 @@ cd miniRT
 make
 ```
 
-## 3. run the executable 
+## 3. launch the executable 
 either without arguments,
 ```bash
 ./miniRT
@@ -47,29 +47,23 @@ or with the path to a specific scene file as argument
 
 # Navigation:
 
-change resolution (for faster movement): numpad - or numpad +
+change resolution/anti-aliasing: R or T
 
 move camera or object: WASDQE
 
 rotate camera or object: arrow keys
 
-move spotlight: IOHJKL
-
-next spotlight: N
-
 select object: right click
 
 change object properties: click on object specific menu item
 
-undo object selection: click on empty space
+undo object selection: right click on empty space
 
 move object on xy axis: lmb + drag
 
 add object: click menu item
 
 change fov: mouse wheel
-
-toggle glossiness(phong reflection): g
 
 # the .rt file describes a 3d scene
 

@@ -6,45 +6,76 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/14 23:56:44 by victor            #+#    #+#             */
-/*   Updated: 2024/11/05 15:29:42 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/08 05:47:28 by bszilas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minirt.h"
 
-bool	decrease_resolution(t_scene *scene)
+bool	key_move_light(int keycode, t_scene *scene)
 {
-	if (scene->resolution_x == SCENE_START_RESOLUTION_X && \
-		scene->resolution_y == SCENE_START_RESOLUTION_Y)
-		return (scene->resolution_x = 1, scene->resolution_y = 1);
-	if (scene->resolution_x > SCENE_START_RESOLUTION_X && \
-		scene->resolution_y > SCENE_START_RESOLUTION_Y)
-		return (scene->resolution_x /= 2, scene->resolution_y /= 2);
-	else
-		return (false);
+	uint	i;
+
+	i = scene->light_focus;
+	if (keycode == XK_h)
+		return (scene->light[i].position.x -= 0.1);
+	else if (keycode == XK_l)
+		return (scene->light[i].position.x += 0.1);
+	else if (keycode == XK_j)
+		return (scene->light[i].position.y += 0.1);
+	else if (keycode == XK_k)
+		return (scene->light[i].position.y -= 0.1);
+	else if (keycode == XK_i)
+		return (scene->light[i].position.z += .2);
+	else if (keycode == XK_o)
+		return (scene->light[i].position.z -= .2);
+	else if (keycode == XK_n)
+		scene->light_focus = (scene->light_focus + 1) % scene->light_count;
+	return (false);
 }
 
 uint	key_change_res(int keycode, t_scene *scene)
 {
-	if (keycode == XK_equal)
+	if (keycode == XK_t)
 	{
-		if (scene->resolution_x >= SCENE_START_RESOLUTION_X * \
-		SCENE_START_RESOLUTION_CAP && scene->resolution_y >= \
-		SCENE_START_RESOLUTION_Y * SCENE_START_RESOLUTION_CAP)
-			return (false);
+		if (scene->anti_aliasing)
+			return (scene->anti_aliasing = false, 1);
 		if (scene->resolution_x == 1 && scene->resolution_y == 1)
 			return (scene->resolution_x = SCENE_START_RESOLUTION_X, \
-					scene->resolution_y = SCENE_START_RESOLUTION_Y);
-		return (scene->resolution_x *= 2, scene->resolution_y *= 2);
+					scene->resolution_y = SCENE_START_RESOLUTION_Y, 1);
+		if (scene->resolution_x >= SCENE_START_RESOLUTION_X * SCENE_START_RESOLUTION_CAP || scene->resolution_y >= SCENE_START_RESOLUTION_Y * SCENE_START_RESOLUTION_CAP) 
+			return (false);
+		scene->resolution_x *= 2;
+		scene->resolution_y *= 2;
 	}
-	else if (keycode == XK_minus)
-		return (decrease_resolution(scene));
-	else if (keycode == XK_Return)
-		return (scene->resolution_x = scene->resolution_y = 1);
-	else if (keycode == XK_BackSpace)
-		return (scene->camera.position = (t_vector){0, 0, 0}, \
-				scene->camera.fov = 90);
-	return (0);
+	else if (keycode == XK_r)
+	{
+		if (scene->resolution_x == 1 && scene->resolution_y == 1)
+			return (scene->anti_aliasing = ANTI_ALIASING_FACTOR, 1);
+		if (scene->resolution_x == SCENE_START_RESOLUTION_X \
+		&& scene->resolution_y == SCENE_START_RESOLUTION_Y)
+			return (scene->resolution_x = 1, scene->resolution_y = 1, 1);
+		if (scene->resolution_x > 1 && scene->resolution_y > 1)
+			return (scene->resolution_x /= 2, scene->resolution_y /= 2, 1);
+	}
+	return (false);
+}
+
+bool	key_move_focused(int keycode, t_vector *focus)
+{
+	if (keycode == XK_d)
+		return (focus->x += 0.1, true);
+	else if (keycode == XK_a)
+		return (focus->x -= 0.1, true);
+	else if (keycode == XK_w)
+		return (focus->y += 0.1, true);
+	else if (keycode == XK_s)
+		return (focus->y -= 0.1, true);
+	else if (keycode == XK_e)
+		return (focus->z += .2, true);
+	else if (keycode == XK_q)
+		return (focus->z -= .2, true);
+	return (false);
 }
 
 uint	key_misc_function(int keycode, t_scene *scene, t_data *data)
@@ -63,13 +94,85 @@ uint	key_misc_function(int keycode, t_scene *scene, t_data *data)
 		data->mouse.grabbed = NULL;
 		return (true);
 	}
+	else if (keycode == XK_g)
+		scene->gloss = !scene->gloss;
+	else if (keycode == XK_b)
+	{
+		scene->sky_sphere = !scene->sky_sphere;
+		scene->ambient.color ^= SKY_COLOR;
+	}
+	return (false);
+}
+
+bool	key_change_fov(int keycode, t_camera *camera)
+{
+	if (keycode == XK_slash)
+	{
+		if (camera->fov < 175)
+		{
+			camera->fov += 5;
+		}
+		return (camera->fov_f = tan(camera->fov / 2 * M_PI / 180));
+	}
+	else if (keycode == XK_period)
+	{
+		if (camera->fov > 5)
+		{
+			camera->fov -= 5;
+		}
+		return (camera->fov_f = tan(camera->fov / 2 * M_PI / 180));
+	}
+	return (false);
+}
+
+bool	key_rotate_cam(int key, t_scene *scene)
+{
+	t_camera	*camera;
+
+	camera = &scene->camera;
+	if ((key == XK_Up && camera->tilt > -80) || \
+	(key == XK_Down && camera->tilt < 80))
+	{
+		camera->normal = rot_x(camera->normal, key - XK_Up - 1);
+		calc_camera_tilt(camera);
+		return (true);
+	}
+	else if (key == XK_Left || key == XK_Right)
+	{
+		camera->normal = rot_y(camera->normal, key - XK_Left - 1);
+		return (true);
+	}
+	else if ((key == XK_1 && camera->tilt > -80) || \
+	(key == XK_3 && camera->tilt < 80))
+	{
+		camera->normal = rot_z(camera->normal, key - XK_1 - 1);
+		calc_camera_tilt(camera);
+		return (true);
+	}
+	return (false);
+}
+
+int	move_body(int keycode, t_body *body)
+{
+	if (!body)
+		return (false);
+	if (body->type == BODY_PLANE)
+		return (move_plane(keycode, &body->plane));
+	else if (body->type == BODY_SPHERE)
+		return (key_move_focused(keycode, &body->sphere.center));
+	else if (body->type == BODY_CYLINDER)
+		return (move_cylinder(keycode, &body->cylinder));
+	else if (body->type == BODY_CONE)
+		return (move_cone(keycode, &body->cone));
+	else if (body->type == BODY_DISK)
+		return (move_disk(keycode, &body->disk));
 	return (false);
 }
 
 void	key_press_distribute(int keycode, t_data *data, t_scene *scene)
 {
-	if (move_body(keycode, scene->focus2) || \
-	key_move_focused(keycode, scene->focus) || \
+	if (move_body(keycode, scene->body_focus) || \
+	key_move_focused(keycode, &scene->camera.position) || \
 	key_rotate_cam(keycode, scene) || \
 	key_misc_function(keycode, scene, data) || \
 	key_change_res(keycode, scene) || \
