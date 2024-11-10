@@ -1,5 +1,5 @@
 This minimalistic raytracing engine is a school project which is still ongoing.
-It is using the [Minilibx API](https://github.com/42Paris/minilibx-linux).
+It is using the [Minilibx library](https://github.com/42Paris/minilibx-linux).
 All code besides the directory minilibx-linux is our work.
 Big thanks to my teammate [vman101](https://github.com/vman101) for implementing many fantastic creative ideas that go way beyond the scope of what is required by the school.
 Credits go to him for his libft and his garbage collector in the memory directory.
