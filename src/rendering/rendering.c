@@ -38,7 +38,7 @@ void	get_background_color(t_scene *sc, t_pixel *px, t_vector v)
 {
 	t_body	skysphere;
 
-	if (sc->sky_sphere && sc->texture + SKYSPHERE)
+	if (sc->sky_sphere)
 	{
 		ft_bzero(&skysphere, sizeof(t_body));
 		skysphere.textured = true;

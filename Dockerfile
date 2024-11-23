@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-RUN apt-get update -y
+RUN apt-get -o Acquire::Max-FutureTime=86400 update -y
 RUN export DEBIAN_FRONTEND=noninteractive && apt-get install -y build-essential xorg libx11-dev libxext-dev libbsd-dev
 RUN apt-get install -y libpthread-stubs0-dev
 

@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../minirt.h"
-#include <mlx.h>
 
 int	close_window(void *data_ptr)
 {
