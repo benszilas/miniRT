@@ -13,11 +13,11 @@
 #ifndef MINIRT_H
 # define MINIRT_H
 
-# include <mlx.h> 
 # include <unistd.h>
 # include <math.h>
 # include <stdlib.h>
-# include "mlx_int.h"
+# include "minilibx-linux/mlx.h"
+# include "minilibx-linux/mlx_int.h"
 # include <errno.h>
 # include <fcntl.h>
 # include "libft/libft.h"
