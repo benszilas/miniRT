@@ -6,7 +6,7 @@
 #    By: vvobis <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/17 14:23:19 by vvobis            #+#    #+#              #
-#    Updated: 2024/09/17 14:23:21 by vvobis           ###   ########.fr        #
+#    Updated: 2024/12/05 20:10:01 by vvobis           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ CC := cc
 
 CFLAGS:= -Wall -Wextra -Werror
 
-SRC := ft_bzero.c ft_isalnum.c ft_isalpha.c	ft_isdigit.c \
+SRC := ft_bzero.c ft_isalnum.c ft_isalpha.c ft_isdigit.c \
 	   ft_isprint.c ft_memcpy.c ft_memmove.c ft_memset.c \
 	   ft_strlcat.c ft_strlcpy.c ft_strlen.c \
 	   ft_isascii.c ft_strchr.c ft_strrchr.c ft_strncmp.c \
@@ -25,7 +25,7 @@ SRC := ft_bzero.c ft_isalnum.c ft_isalpha.c	ft_isdigit.c \
 	   ft_substr.c ft_strjoin.c ft_strtrim.c ft_split.c \
 	   ft_itoa.c ft_strmapi.c ft_striteri.c ft_putchar_fd.c \
 	   ft_putstr_fd.c ft_putendl_fd.c ft_putnbr_fd.c \
-	   ft_isspace.c ft_free.c
+	   ft_isspace.c ft_free.c ft_read.c
 
 SRCGNL := gnl/get_next_line.c gnl/get_next_line_utils.c
 

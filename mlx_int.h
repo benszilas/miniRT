@@ -6,7 +6,7 @@
 /*   By: vvobis <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/06 17:10:02 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/13 15:43:48 by victor           ###   ########.fr       */
+/*   Updated: 2024/12/05 19:43:38 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,7 +106,5 @@ typedef struct s_xvar
 	Atom		wm_protocols;
 	int			end_loop;
 }	t_xvar;
-
-int				mlx_flush_event(t_xvar *xvar);
 
 #endif

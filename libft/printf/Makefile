@@ -3,17 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+         #
+#    By: victor </var/spool/mail/victor>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/09/14 09:21:46 by victor            #+#    #+#              #
-#    Updated: 2024/11/05 15:55:07 by bszilas          ###   ########.fr        #
+#    Updated: 2024/11/29 12:29:25 by vvobis           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME := libftprintf.a
 CC := cc
 CFLAGS := -Wall -Werror -Wextra
-SRC := ft_putfloat.c ft_fprintf.c ft_printf.c ft_putascii.c ft_puthex.c ft_putptr.c ft_strlen.c
+SRC := ft_fprintf.c ft_printf.c ft_putascii.c ft_puthex.c ft_putptr.c ft_strlen.c ft_putfloat.c
 OBJ := $(SRC:.c=.o)
 
 all: $(NAME)

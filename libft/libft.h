@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/09 23:43:36 by vvobis            #+#    #+#             */
-/*   Updated: 2024/09/17 12:08:58 by vvobis           ###   ########.fr       */
+/*   Updated: 2024/12/05 19:58:13 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ void	*ft_calloc(size_t n, size_t s);
 
 /*Info Conversion*/
 int		ft_atoi(char const *s);
+double	ft_atod(char *s);
 char	*ft_itoa(int n);
 char	**ft_split(char const *s, char c);
 void	ft_free(void *ptr_ptr);

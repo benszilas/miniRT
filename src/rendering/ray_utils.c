@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 18:17:12 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/04 11:25:36 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/26 18:53:14 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,5 +37,5 @@ double	smaller_non_negative(double a, double b)
 
 void	apply_shadow_bias(t_vector *p, t_vector normal, double scale)
 {
-	*p = add_vector(*p, scale_vector(normal, SHADOW_BIAS * scale));	
+	*p = add_vector(*p, scale_vector(normal, SHADOW_BIAS * scale));
 }

@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:44:38 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/08 04:07:51 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/12/05 16:35:35 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,24 +21,6 @@ void	set_pixel_distances(t_pixel *array, uint size, double dist)
 	{
 		array[i].dist = dist;
 		i++;
-	}
-}
-
-void	pixel_clear_id(t_pixel *pixel)
-{
-	uint	x;
-	uint	y;
-
-	y = 0;
-	while (y < HI)
-	{
-		x = 0;
-		while (x < WI)
-		{
-			pixel[y * WI + x].id = 0;
-			x++;
-		}
-		y++;
 	}
 }
 
@@ -72,40 +54,31 @@ t_pixel	*pixel_plane_create(void)
 	return (pixels);
 }
 
-void	calc_phong_vectors(t_hit_point *hit, t_light *l)
+void	pixel_fill(t_pixel *pixel, t_scene *scene)
 {
-	apply_shadow_bias(&hit->p, hit->n, 1);
-	l->ray = vector_subtract(hit->p, l->position);
-	l->obj_distance = vector_length(l->ray);
-	normalize_vector(&l->ray);
-	hit->r = reflect_vector(l->ray, hit->n);
-	l->ray = scale_vector(l->ray, -1);
-}
-
-void	trace_lights(t_scene *sc, t_pixel *px, t_hit_point hit)
-{
-	uint	color_from_lights;
-	uint	color_from_ambient;
 	uint	i;
+	uint	j;
+	t_pixel	pixel_new;
 
 	i = 0;
-	color_from_lights = 0;
-	while (i < sc->light_count)
+	pixel_new = *pixel;
+	while (i < scene->resolution_y)
 	{
-		calc_phong_vectors(&hit, sc->light + i);
-		if (!shadow(hit.p, sc->light[i], sc->body, sc))
+		j = 0;
+		while (j < scene->resolution_x)
 		{
-			color_from_lights = add_color(color_from_lights, \
-			phong_reflection(*px->color, \
-			dot_product(hit.n, sc->light[i].ray), sc->light[i], 1));
-			if (sc->gloss)
-				color_from_lights = add_color(color_from_lights, \
-			phong_reflection(0xFFFFFF, dot_product(hit.r, hit.v), \
-			sc->light[i], sc->gloss * GLOSSINESS));
+			*pixel[i * WI + j].color = *pixel_new.color;
+			pixel[i * WI + j].id = pixel_new.id;
+			pixel[i * WI + j].dist = pixel_new.dist;
+			j++;
 		}
 		i++;
 	}
-	color_from_ambient = get_color(*px->color, sc->ambient.color, 1);
-	*px->color = add_color(color_from_lights, color_from_ambient);
-	pixel_fill(px, sc);
+}
+
+void	set_info_to_pixel(t_pixel *pixel, t_body *body, double dist)
+{
+	pixel->id = body->id;
+	pixel->dist = dist;
+	pixel->surface_smoothness = body->surface_smoothness;
 }

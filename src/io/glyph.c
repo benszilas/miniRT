@@ -6,13 +6,13 @@
 /*   By: vvobis <marvin@42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/05/28 17:29:23 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/13 15:44:35 by victor           ###   ########.fr       */
+/*   Updated: 2024/12/05 14:45:55 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minirt.h"
 
-static void	glyphs_create(char glyph[30][7][7], char const *path)
+static void	glyphs_create(char ****glyph, char const *path)
 {
 	size_t	i;
 	int		fd;
@@ -20,15 +20,20 @@ static void	glyphs_create(char glyph[30][7][7], char const *path)
 	char	c;
 
 	i = 0;
+	*glyph = ft_calloc(GLYPH_COUNT, sizeof(*glyph));
+	lst_memory(*glyph, free, ADD);
 	ft_open(&fd, path, O_RDONLY, 0644);
 	while (i < GLYPH_COUNT)
 	{
-		j = 0;
-		while (j < GLYPH_ROW)
+		(*glyph)[i] = ft_calloc(GLYPH_ROW, sizeof(**glyph));
+		lst_memory((*glyph)[i], free, ADD);
+		j = -1;
+		while (++j < GLYPH_ROW)
 		{
-			ft_read(fd, glyph[i][j], GLYPH_COL + 1);
-			glyph[i][j][GLYPH_COL] = 0;
-			j++;
+			(*glyph)[i][j] = ft_calloc(GLYPH_COL, sizeof(***glyph));
+			lst_memory((*glyph)[i][j], free, ADD);
+			ft_read(fd, (*glyph)[i][j], GLYPH_COL + 1);
+			(*glyph)[i][j][GLYPH_COL] = 0;
 		}
 		ft_read(fd, &c, 1);
 		i++;
@@ -39,43 +44,56 @@ static void	glyphs_create(char glyph[30][7][7], char const *path)
 static void	glyph_draw(	t_pixel *pixel, \
 						uint x, \
 						uint y, \
-						char glyph[GLYPH_ROW][GLYPH_COL + 1])
+						char **glyph)
 {
 	size_t	i;
 	size_t	j;
 
 	i = 0;
-	while (i / 2 < GLYPH_ROW)
+	if (x + 1 < WI)
 	{
-		j = 0;
-		while (j / 2 < GLYPH_COL)
+		while (i / 2 < GLYPH_ROW)
 		{
-			if (glyph[i / 2][j / 2] == '1')
+			j = 0;
+			while (j / 2 < GLYPH_COL)
 			{
-				*(int *)pixel[(y + i) * WI + (x + j)].color = 0xffffff;
-				*(int *)pixel[(y + i + 1) * WI + (x + j)].color = 0xffffff;
-				*(int *)pixel[(y + i) * WI + (x + j + 1)].color = 0xffffff;
-				*(int *)pixel[(y + i + 1) * WI + (x + j + 1)].color = 0xffffff;
+				if (x + j + 1 < WI && y + i + 1 < HI \
+						&& glyph[i / 2][j / 2] == '1')
+				{
+					*pixel[(y + i) * WI + (x + j)].color = 0xffffff;
+					*pixel[(y + i + 1) * WI + (x + j)].color = 0xffffff;
+					*pixel[(y + i) * WI + (x + j + 1)].color = 0xffffff;
+					*pixel[(y + i + 1) * WI + (x + j + 1)].color = 0xffffff;
+				}
+				j += 2;
 			}
-			j += 2;
+			i += 2;
 		}
-		i += 2;
 	}
 }
 
 static int	glyph_which(uint *begin_x, uint *begin_y, char const c)
 {
 	if (ft_isalpha(c))
-		return (*begin_x += 12, c - 97);
-	if (c == ':')
-		return (*begin_x += 12, 26);
-	if (c == '+')
-		return (*begin_x += 12, 27);
-	if (c == '-')
-		return (*begin_x += 12, 28);
-	if (c == '=')
-		return (*begin_x += 12, 29);
-	if (c == '\n')
+	{
+		*begin_x += 12;
+		if (c >= 'A' && c <= 'Z')
+			return (c - 65 + 26);
+		return (c - 97 + 52);
+	}
+	else if (ft_isdigit(c))
+	{
+		return (*begin_x += 12, c - 48 + 16);
+	}
+	else if (c >= ' ' && c <= '/')
+		return (*begin_x += 12, c - 32);
+	else if (c == '_')
+		return (*begin_x += 12, 78);
+	else if (c == ':')
+		return (*begin_x += 12, 79);
+	else if (c == '=')
+		return (*begin_x += 12, 80);
+	else if (c == '\n')
 		return (*begin_y += 16, -1);
 	return (*begin_x += 12, -2);
 }
@@ -88,14 +106,10 @@ void	glyph_print(	uint begin_x, \
 	size_t		i;
 	int			x;
 	int			index;
-	static char	glyph[30][7][7] = {0};
-	static bool	created = 0;
+	static char	***glyph = {0};
 
-	if (!created)
-	{
-		glyphs_create(glyph, "./assets/alpha_bit_bonus");
-		created = true;
-	}
+	if (!glyph)
+		glyphs_create(&glyph, "./assets/alpha_bit_bonus");
 	x = begin_x;
 	i = 0;
 	while (text[i])

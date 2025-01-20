@@ -6,68 +6,54 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 19:50:16 by vvobis            #+#    #+#             */
-/*   Updated: 2024/11/08 06:39:12 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/12/05 16:35:46 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minirt.h"
 
-void	pixel_fill(t_pixel *pixel, t_scene *scene)
-{
-	uint	i;
-	uint	j;
-	t_pixel	pixel_new;
-
-	i = 0;
-	pixel_new = *pixel;
-	while (i < scene->resolution_y)
-	{
-		j = 0;
-		while (j < scene->resolution_x)
-		{
-			*pixel[i * WI + j].color = *pixel_new.color;
-			pixel[i * WI + j].id = pixel_new.id;
-			pixel[i * WI + j].dist = pixel_new.dist;
-			j++;
-		}
-		i++;
-	}
-}
-
 void	get_background_color(t_scene *sc, t_pixel *px, t_vector v)
 {
-	t_body	skysphere;
+	t_body		skysphere;
+	t_hit_point	hit;
 
 	if (sc->sky_sphere)
 	{
+		hit.p = v;
 		ft_bzero(&skysphere, sizeof(t_body));
 		skysphere.textured = true;
-		skysphere.texture = sc->texture + SKYSPHERE;
+		skysphere.texture = &sc->sky;
 		skysphere.sphere.radius = 1;
-		get_color_sphere(&skysphere, v, px);
+		get_color_sphere(&skysphere, &hit, px);
 	}
 	else
-		*px->color = get_color(sc->ambient.color, 0xFFFFFF, sc->ambient.intensity);
+		*px->color = 0;
+}
+
+void	reduce_light_intensity(t_light *light, uint light_count)
+{
+	uint	i;
+
+	i = 0;
+	while (i < light_count)
+		light[i++].intensity *= 0.9;
 }
 
 void	trace_reflection(t_pixel *pixel, t_hit_point hit, t_scene new_scene)
 {
-	uint	i;
 	uint	mirror_id;
 	double	mirror_dist;
 
-	i = 0;
-	while (i < new_scene.light_count)
-		new_scene.light[i++].intensity *= 0.9;
+	reduce_light_intensity(new_scene.light, new_scene.light_count);
 	new_scene.camera.position = hit.p;
 	new_scene.depth += 1;
 	mirror_id = pixel->id;
 	mirror_dist = pixel->dist;
 	pixel->dist = -1;
 	ray_check_bodys(pixel, hit.r, &new_scene);
-	pixel->id = mirror_id;
 	if (pixel->dist == -1)
 		get_background_color(&new_scene, pixel, hit.r);
+	pixel->id = mirror_id;
 	pixel->dist = mirror_dist;
 }
 
@@ -100,33 +86,14 @@ void	ray_check_bodys(t_pixel *pixel, t_vector ray, t_scene *scene)
 	}
 }
 
-int	time_value_substract(	struct timeval time_minuend, \
-							struct timeval time_substrahend)
-{
-	double	time_minuend_total_value;
-	double	time_substrahend_total_value;
-
-	time_minuend_total_value = (time_minuend.tv_sec * 1000) \
-								+ (time_minuend.tv_usec / 1000.);
-	time_substrahend_total_value = (time_substrahend.tv_sec * 1000.) \
-								+ (time_substrahend.tv_usec / 1000.);
-	return (time_minuend_total_value - time_substrahend_total_value);
-}
-
 uint	rendering_loop(t_data *data)
 {
-	/*unblock threads so they can lock read*/
 	pthread_rwlock_unlock(&data->rwlock);
-	/*synchronize until all threads lock read*/
 	pthread_barrier_wait(&data->barrier);
-	/*block until threads make the image and release all read locks*/
 	pthread_rwlock_wrlock(&data->rwlock);
-	/*tell threads they can now wait for read locks*/
 	pthread_barrier_wait(&data->barrier);
 	if (data->func_ptr)
 		data->func_ptr(data, data->param);
-	else
-		help_menu_draw(data, NULL);
 	mlx_put_image_to_window(data->mlx, data->win, &data->image, 0, 0);
 	mlx_do_sync(data->mlx);
 	return (0);

@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/15 00:01:14 by victor            #+#    #+#             */
-/*   Updated: 2024/11/08 06:36:56 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/27 11:14:52 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,121 +22,60 @@ void	mouse_grab(t_mouse *mouse, t_body *body)
 		mouse->color_store = ((t_body *)mouse->grabbed)->color;
 		((t_body *)mouse->grabbed)->color = 0x0000ffff;
 	}
-}
-
-void	mouse_click_left(int x, int y, t_scene *scene, t_mouse *mouse)
-{
-	uint	id_group;
-	t_body	*body;
-
-	mouse->prev_x = x;
-	mouse->prev_y = y;
-	mouse->left_is_pressed = true;
-	id_group = id_group_get(scene->pixel[y * WI + x].id);
-	mouse->data->func_ptr = NULL;
-	if (id_group == ID_GROUP_ITEM)
-		return (container_item_get_by_id(mouse->data->param, \
-				scene->pixel[y * WI + x].id), \
-				mouse->data->func_ptr = container_draw, (void)0);
-	if (id_group > 0 && id_group < ID_GROUP_ITEM)
-	{
-		body = body_get_by_id(scene->pixel[y * WI + x].id, scene);
-		mouse_grab(mouse, body);
-		return ;
-	}
-	if (mouse->grabbed)
-		return (mouse->grabbed->color = mouse->color_store, \
-				mouse->grabbed = NULL, (void)0);
-}
-
-void	mouse_click_right(int x, int y, t_data *data, t_mouse *mouse)
-{
-	uint	id_group;
-	t_body	*body;
-
-	id_group = id_group_get(data->pixel[y * WI + x].id);
-	data->scene.body_focus = NULL;
-	if (id_group >= ID_GROUP_SPHERE && id_group <= ID_GROUP_CONE)
-	{
-		body = body_get_by_id(data->pixel[y * WI + x].id, &data->scene);
-		data->scene.body_focus = body;
-		if (id_group == ID_GROUP_PLANE)
-			plane_menu_map(&data->menu[ID_GROUP_PLANE], body, &body->color);
-		else if (id_group == ID_GROUP_SPHERE)
-			sphere_menu_map(&data->menu[ID_GROUP_SPHERE], body, &body->color);
-		else if (id_group == ID_GROUP_CYLINDER)
-			cylinder_menu_map(&data->menu[ID_GROUP_CYLINDER], \
-					body, &body->color);
-		else if (id_group == ID_GROUP_CONE)
-			cone_menu_map(&data->menu[ID_GROUP_CONE], body, &body->color);
-		else if (id_group == ID_GROUP_DISC)
-			disk_menu_map(&data->menu[ID_GROUP_DISC], body, &body->color);
-	}
 	else
+	{
 		mouse->grabbed = NULL;
-	data->param = &data->menu[id_group];
-	data->func_ptr = container_draw;
-}
-
-void	mouse_scroll(int button, t_scene *scene, t_mouse *mouse)
-{
-	if (button == SCROLL_UP)
-	{
-		if (mouse->grabbed)
-		{
-			if (((t_body *)mouse->grabbed)->type == BODY_SPHERE)
-				((t_body *)mouse->grabbed)->sphere.radius += 0.1;
-			else if (((t_body *)mouse->grabbed)->type == BODY_PLANE)
-				((t_body *)mouse->grabbed)->plane.normal.y += 0.01;
-			return ;
-		}
-		key_change_fov(XK_slash, &scene->camera);
-	}
-	else if (button == SCROLL_DOWN)
-	{
-		if (mouse->grabbed)
-		{
-			if (((t_body *)mouse->grabbed)->type == BODY_SPHERE)
-				((t_body *)mouse->grabbed)->sphere.radius -= 0.1;
-			else if (((t_body *)mouse->grabbed)->type == BODY_PLANE)
-				((t_body *)mouse->grabbed)->plane.normal.y -= 0.01;
-			return ;
-		}
-		key_change_fov(XK_period, &scene->camera);
 	}
 }
 
-int	mouse_press(int button, int x, int y, t_data *data)
+void	mouse_slider_move(uint x, t_mouse *mouse)
 {
-	if (button == LEFT_CLICK)
-		mouse_click_left(x, y, &data->scene, &data->mouse);
-	else if (button == RIGHT_CLICK)
-		mouse_click_right(x, y, data, &data->mouse);
-	else
-		mouse_scroll(button, &data->scene, &data->mouse);
-	rendering_loop(data);
-	return (0);
+	if (x > mouse->slider->bar.x)
+		mouse->slider->cursor.x = (int)x;
+	if (mouse->slider->cursor.x + mouse->slider->cursor.width \
+			> mouse->slider->bar.x + mouse->slider->bar.width)
+		mouse->slider->cursor.x = mouse->slider->bar.x \
+	+ mouse->slider->bar.width - mouse->slider->cursor.width;
+	menu_slider_value_calculate(mouse->slider);
 }
 
-int	mouse_release(int button, int x, int y, t_data *data)
+void	mouse_move_body(double dx, double dy, int id_group, t_mouse *mouse)
 {
-	if (button == 1)
+	if (id_group == ID_GROUP_SPHERE)
+		return ((mouse->grabbed)->sphere.center.x += dx / 10, \
+				(mouse->grabbed)->sphere.center.y -= dy / 10, (void)0);
+	else if (id_group == ID_GROUP_PLANE)
 	{
-		data->mouse.left_is_pressed = false;
-		if (data->mouse.grabbed)
-		{
-			(void)x;
-			(void)y;
-			((t_body *)data->mouse.grabbed)->color = data->mouse.color_store;
-		}
-		data->mouse.grabbed = NULL;
-		rendering_loop(data);
+		(mouse->grabbed)->plane.point.x += dx / 10;
+		(mouse->grabbed)->plane.point.y -= dy / 10;
 	}
-	else if (button == 3)
+	else if (id_group == ID_GROUP_CYLINDER)
 	{
-		data->mouse.right_is_pressed = false;
+		(mouse->grabbed)->cylinder.center.x += dx / 10;
+		(mouse->grabbed)->cylinder.center.y -= dy / 10;
+		calc_cyl_data(&mouse->grabbed->cylinder);
 	}
-	return (0);
+	else if (id_group == ID_GROUP_DISC)
+	{
+		(mouse->grabbed)->disk.point.x += dx / 10;
+		(mouse->grabbed)->disk.point.y -= dy / 10;
+	}
+	else if (id_group == ID_GROUP_CONE)
+	{
+		(mouse->grabbed)->cone.vertex.x += dx / 10;
+		(mouse->grabbed)->cone.vertex.y -= dy / 10;
+		calc_cone_data(&mouse->grabbed->cone);
+	}
+}
+
+void	decrease_resolution(t_scene *scene)
+{
+	if (scene->resolution_x == 1 && scene->resolution_y == 1)
+	{
+		scene->anti_aliasing = false;
+		scene->resolution_x = RESOLUTION_SCALE_X;
+		scene->resolution_y = RESOLUTION_SCALE_Y;
+	}
 }
 
 void	mouse_left_move(int x, int y, t_mouse *mouse, t_scene *scene)
@@ -147,55 +86,17 @@ void	mouse_left_move(int x, int y, t_mouse *mouse, t_scene *scene)
 
 	dx = x - mouse->prev_x;
 	dy = y - mouse->prev_y;
-	if (mouse->grabbed == NULL)
+	if (mouse->grabbed == NULL && !mouse->slider)
 	{
 		scene->camera.position.x -= dx / 10;
 		scene->camera.position.y += dy / 10;
 	}
+	else if (mouse->slider)
+		mouse_slider_move(x, mouse);
 	else
 	{
 		id_group = id_group_get(mouse->grabbed->id);
-		if (id_group == ID_GROUP_SPHERE)
-		{
-			(mouse->grabbed)->sphere.center.x += dx / 10;
-			(mouse->grabbed)->sphere.center.y -= dy / 10;
-		}
-		else if (id_group == ID_GROUP_PLANE)
-		{
-			(mouse->grabbed)->plane.point.x += dx / 10;
-			(mouse->grabbed)->plane.point.y -= dy / 10;
-		}
-		else if (id_group == ID_GROUP_CYLINDER)
-		{
-			(mouse->grabbed)->cylinder.center.x += dx / 10;
-			(mouse->grabbed)->cylinder.center.y -= dy / 10;
-			calc_cyl_data(&mouse->grabbed->cylinder);
-		}
-		else if (id_group == ID_GROUP_DISC)
-		{
-			(mouse->grabbed)->disk.point.x += dx / 10;
-			(mouse->grabbed)->disk.point.y -= dy / 10;
-		}
-		else if (id_group == ID_GROUP_CONE)
-		{
-			(mouse->grabbed)->cone.vertex.x += dx / 10;
-			(mouse->grabbed)->cone.vertex.y -= dy / 10;
-			calc_cone_data(&mouse->grabbed->cone);
-		}
-	}
-}
-
-void	mouse_right_move(int x, int y, t_mouse *mouse, t_scene *scene)
-{
-	double	dx;
-	double	dy;
-
-	dx = x - mouse->prev_x;
-	dy = y - mouse->prev_y;
-	if (mouse->grabbed == NULL)
-	{
-		scene->camera.position.x -= dx;
-		scene->camera.position.y += dy;
+		mouse_move_body(dx, dy, id_group, mouse);
 	}
 }
 
@@ -205,6 +106,7 @@ int	mouse_move(int x, int y, t_data *data)
 
 	if (data->mouse.left_is_pressed)
 	{
+		decrease_resolution(&data->scene);
 		if (fake_frames > 2)
 		{
 			mouse_left_move(x, y, &data->mouse, &data->scene);

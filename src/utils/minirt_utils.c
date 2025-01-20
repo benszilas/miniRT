@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minirt_utils.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: victor </var/spool/mail/victor>            +#+  +:+       +#+        */
+/*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/08 16:50:35 by victor            #+#    #+#             */
-/*   Updated: 2024/09/15 11:03:37 by victor           ###   ########.fr       */
+/*   Updated: 2024/12/10 16:16:15 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ int	ft_read(int fd, char *character, unsigned int size_to_read)
 	bytes_read = read(fd, character, size_to_read);
 	if (bytes_read == -1)
 	{
-		perror("read");
+		ft_fprintf(STDERR_FILENO, "read: %s", strerror(errno));
 		lst_memory(NULL, NULL, FAIL);
 	}
 	return (bytes_read);
@@ -31,7 +31,7 @@ int	ft_close(int fd)
 		return (0);
 	if (close(fd) == -1)
 	{
-		perror("close");
+		ft_fprintf(STDERR_FILENO, "close: %s", strerror(errno));
 		lst_memory(NULL, NULL, FAIL);
 	}
 	return (1);
@@ -47,22 +47,19 @@ void	ft_open(int *fd, const char *path, int flag, int permissons)
 		*fd = open(path, flag);
 	if (*fd == -1)
 	{
-		perror("open");
+		ft_fprintf(STDERR_FILENO, "open: %s: %s", path, strerror(errno));
 		lst_memory(NULL, NULL, FAIL);
 	}
 }
 
-void	ft_putnbrf_fd(double f, int fd, int precision)
+void	minirt_fd_close(void *ptr)
 {
-	int		number;
-	double	fraction;
+	close(*(int *)ptr);
+}
 
-	number = (int)f;
-	fraction = f - (double)number;
-	if (fraction < 0)
-		fraction = -fraction;
-	ft_putnbr_fd(number, fd);
-	ft_putchar_fd('.', fd);
-	number = fraction * pow(10, precision);
-	ft_putnbr_fd(number, fd);
+void	swap_2_ints(uint *a, uint *b)
+{
+	*a = *a ^ *b;
+	*b = *a ^ *b;
+	*a = *a ^ *b;
 }

@@ -6,16 +6,11 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/12 17:42:35 by vvobis            #+#    #+#             */
-/*   Updated: 2024/10/21 21:35:48 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/29 12:34:24 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../minirt.h"
-
-double	vector_length(t_vector vec)
-{
-	return (sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z));
-}
 
 double	dot_product(t_vector a, t_vector b)
 {
@@ -47,9 +42,9 @@ t_vector	vector_subtract(t_vector vec1, t_vector vec2)
 
 void	vector_print(t_vector vector, int fd)
 {
-	ft_putnbrf_fd(vector.x, fd, 3);
+	ft_fprintf(fd, "%f", vector.x);
 	ft_putchar_fd(',', fd);
-	ft_putnbrf_fd(vector.y, fd, 3);
+	ft_fprintf(fd, "%f", vector.y);
 	ft_putchar_fd(',', fd);
-	ft_putnbrf_fd(vector.z, fd, 3);
+	ft_fprintf(fd, "%f", vector.z);
 }

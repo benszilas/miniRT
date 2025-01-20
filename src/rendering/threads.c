@@ -6,7 +6,7 @@
 /*   By: bszilas <bszilas@student.42vienna.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 10:28:03 by victor            #+#    #+#             */
-/*   Updated: 2024/11/07 17:05:28 by bszilas          ###   ########.fr       */
+/*   Updated: 2024/11/26 18:52:48 by vvobis           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,25 +62,13 @@ void	*thread_rendering_loop(void *thread_ptr)
 	thread = (t_thread *)thread_ptr;
 	while (1)
 	{
-		/*block until main thread has done writing*/
 		pthread_rwlock_rdlock(thread->rwlock);
-		
-		/*if Esc is pressed this condition breaks the loop*/
 		if (thread->data->go == false)
 			break ;
-			
-		/*tell main thread that everyone locked read*/
 		pthread_barrier_wait(&thread->data->barrier);
-
-		/*this replaces the thread_scene_update function*/
 		scene = *thread->scene;
-		
 		thread_define_camera_rays(thread, scene.pixel, &scene, &scene.camera);
-		
-		/*tell main thread that its finished*/
 		pthread_rwlock_unlock(thread->rwlock);
-		
-		/*synchronize until main thread acquires write lock*/
 		pthread_barrier_wait(&thread->data->barrier);
 	}
 	pthread_rwlock_unlock(thread->rwlock);
