@@ -27,7 +27,7 @@ void	get_background_color(t_scene *sc, t_pixel *px, t_vector v)
 		get_color_sphere(&skysphere, &hit, px);
 	}
 	else
-		*px->color = 0;
+		*px->color = 0x000000;
 }
 
 void	reduce_light_intensity(t_light *light, uint light_count)

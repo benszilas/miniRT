@@ -46,6 +46,32 @@ float	aa_y(uint y, uint i)
 	return (y + ((float)i / SQRT_AA_FACTOR) * REC_SQRT_AA_FACTOR);
 }
 
+bool	requires_supersampling(uint x, uint y, t_pixel *pixel, bool aa_on)
+{
+	uint	color;
+	uint	color_left;
+	uint	color_above;
+	float	limit;
+	
+	if (!aa_on)
+		return false;
+	if (x == 0 && y == 0) //top left pixel in thread
+		return true;
+	color = *pixel->color;
+	color_above = (y != 0) ? *pixel[(y - 1) * WI + x].color : color;
+	color_left = (x != 0) ? *pixel[y * WI + (x - 1)].color : color;
+
+	if (!color_above || !color_left)
+		return true;
+	limit = 10;
+	if (limit < color_distance(color >> 16 & 0xff, color >> 8 & 0xff, color & 0xff, \
+	color_above >> 16 & 0xff, color_above >> 8 & 0xff, color_above & 0xff))
+		return true;
+
+	return (limit < color_distance(color >> 16 & 0xff, color >> 8 & 0xff, color & 0xff, \
+	color_left >> 16 & 0xff, color_left >> 8 & 0xff, color_left & 0xff));
+}
+
 void	anti_aliasing_loop(t_scene *scene, uint x, uint y, t_pixel *pixel)
 {
 	uint		i;
@@ -53,6 +79,7 @@ void	anti_aliasing_loop(t_scene *scene, uint x, uint y, t_pixel *pixel)
 	uint		color[ANTI_ALIASING_FACTOR];
 
 	i = 0;
+
 	while (i < scene->anti_aliasing + 1)
 	{
 		ray = set_ray(aa_x(x, i), aa_y(y, i), scene, &scene->camera);
@@ -67,8 +94,8 @@ void	anti_aliasing_loop(t_scene *scene, uint x, uint y, t_pixel *pixel)
 void	thread_define_camera_rays(t_thread *thread, t_pixel *pixel, \
 		t_scene *scene, t_camera *camera)
 {
-	uint		x;
-	uint		y;
+	uint	x;
+	uint	y;
 
 	y = thread->starty;
 	set_world_matrix(camera);

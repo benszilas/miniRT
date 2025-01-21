@@ -89,3 +89,8 @@ uint	color_brightness(uint original, float brightness)
 		b = 255;
 	return (set_color(r, g, b));
 }
+
+float color_distance(uint r1, uint g1, uint b1, uint r2, uint g2, uint b2)
+{
+    return sqrt(pow(r2 - r1, 2) + pow(g2 - g1, 2) + pow(b2 - b1, 2));
+}

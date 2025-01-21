@@ -62,6 +62,8 @@ OBJUTIL := $(SRCUTIL:%.c=$(OBJDIR)/%.o)
 ifdef DEBUG
 	CFLAGS += -D VALGRIND
 	CFLAGS += -g3
+else
+	CFLAGS += -O3
 endif
 
 all: $(OBJDIR) $(NAME)

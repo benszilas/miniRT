@@ -535,6 +535,8 @@ uint		add_color(uint color1, uint color2);
 uint		parse_body_color(char *params[], int *error);
 void		get_background_color(t_scene *sc, t_pixel *px, t_vector v);
 uint		color_brightness(uint original, float brightness);
+/* Function to calculate the Euclidean distance between two colors */
+float		color_distance(uint r1, uint g1, uint b1, uint r2, uint g2, uint b2);
 
 /* Sphere */
 bool		parse_sphere(char *entry, uint line_count, \
