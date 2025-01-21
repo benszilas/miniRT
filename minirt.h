@@ -341,11 +341,11 @@ typedef struct s_cone
 }	t_cone;
 
 # ifndef TEXTURE_PATH
-#  define TEXTURE_PATH "./assets/earth.ppm"
+#  define TEXTURE_PATH "./assets/textures/earth.ppm"
 # endif
 
 # ifndef SKYBOX_PATH
-#  define SKYBOX_PATH "./assets/sky.ppm"
+#  define SKYBOX_PATH "./assets/textures/sky.ppm"
 # endif
 
 typedef struct s_texture
@@ -357,7 +357,7 @@ typedef struct s_texture
 }	t_texture;
 
 # ifndef BUMP_MAP_PATH
-#  define BUMP_MAP_PATH "./assets/earth.bump"
+#  define BUMP_MAP_PATH "./assets/bump maps/earth.bump"
 # endif
 
 typedef struct s_bump_map

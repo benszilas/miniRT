@@ -5,7 +5,7 @@ Big thanks to my teammate [vman101](https://github.com/vman101) for implementing
 Credits go to him for his libft and his garbage collector in the memory directory.
 We are still working on this fun raytracing engine so there is more to come!
 
-# Run using Docker:
+# Run in a Docker container:
 
 ```bash
 git clone git@github.com:Fapad/miniRT.git
@@ -47,23 +47,23 @@ or with the path to a specific scene file as argument
 
 # Navigation:
 
-change resolution/anti-aliasing: R or T
+change resolution/anti-aliasing: numpad + or -
 
 move camera or object: WASDQE
 
 rotate camera or object: arrow keys
 
-select object: right click
+change object color, reflection, texture: use object menu
 
-change object properties: click on object specific menu item
+object menu: right click
 
-undo object selection: right click on empty space
+undo object selection: left click
 
 move object on xy axis: lmb + drag
 
 add object: click menu item
 
-change fov: mouse wheel
+change field of view: mouse wheel
 
 # the .rt file describes a 3d scene
 

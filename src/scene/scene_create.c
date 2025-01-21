@@ -146,4 +146,5 @@ void	scene_create(const char *filepath, t_scene *scene)
 	ft_close(fd);
 	scene->resolution_x = SCENE_START_RESOLUTION_X;
 	scene->resolution_y = SCENE_START_RESOLUTION_Y;
+	srand(time(NULL));
 }

@@ -41,6 +41,13 @@ void	save_all_lights(t_scene *scene, int fd)
 	ambient_save(scene->ambient, fd);
 }
 
+void	micro_displace_vector(t_vector *position)
+{
+	position->x += 0.001f * (rand() & 0xf);
+	position->y += 0.001f * (rand() & 0xf);
+	position->z += 0.001f * (rand() & 0xf);
+}
+
 bool	parse_light(char *entry_light, uint line_count, t_light *light, \
 		int count)
 {
@@ -63,6 +70,7 @@ bool	parse_light(char *entry_light, uint line_count, t_light *light, \
 		.color = parse_body_color(params + 4, &error)};
 	if (error || light->intensity < 0 || light->intensity > 1.0)
 		return (err("light", line_count), false);
+	micro_displace_vector(&light->position);	//make light-object intersections unlikely
 	return (true);
 }
 

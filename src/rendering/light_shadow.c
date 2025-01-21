@@ -74,11 +74,12 @@ bool	shadow(t_vector p, t_light l, t_body *body, t_scene *scene)
 	&& (shadow < SHADOW_BIAS || shadow > l.obj_distance + SHADOW_BIAS))
 	{
 		if (body[j].type == BODY_SPHERE)
-			shadow = sphere_shadow(p, l, &body[j].sphere);
+			shadow = sphere_hit_distance(l.ray, vector_subtract(\
+						body[j].sphere.center, p), body[j].sphere, &misc);
 		else if (body[j].type == BODY_PLANE)
 			shadow = plane_hit_distance(body[j].plane, p, l.ray, &misc);
 		else if (body[j].type == BODY_CYLINDER)
-			shadow = cylinder_shadow(p, l, &body[j].cylinder);
+			shadow = cyl_components_shadow(body[j].cylinder, l.ray, p);
 		else if (body[j].type == BODY_DISK)
 			shadow = disk_hit_distance(body[j].disk, l.ray, p, &misc);
 		else if (body[j].type == BODY_CONE)
