@@ -31,8 +31,7 @@ uint	key_change_res_decrease(t_scene *scene)
 {
 	if (scene->anti_aliasing)
 	{
-		(scene->anti_aliasing == 9) ? scene->anti_aliasing == 4
-		: (scene->anti_aliasing == 4) ? scene->anti_aliasing == false;
+		scene->anti_aliasing = (scene->anti_aliasing == 9) ? 4 : false;
 		return (1);
 	}
 	if (scene->resolution_x == 1 && scene->resolution_y == 1)
@@ -41,9 +40,10 @@ uint	key_change_res_decrease(t_scene *scene)
 	if (scene->resolution_x >= RESOLUTION_SCALE_X * \
 			SCENE_START_RESOLUTION_CAP || scene->resolution_y >= \
 			RESOLUTION_SCALE_Y * SCENE_START_RESOLUTION_CAP)
-		return (false);
+		return (1);
 	scene->resolution_x *= 2;
 	scene->resolution_y *= 2;
+	return (1);
 }
 
 uint	key_change_res(int keycode, t_scene *scene)
