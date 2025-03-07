@@ -24,7 +24,7 @@ SRC := minirt.c
 
 SCENEDIR := scene
 SRCSCENE := $(addprefix $(SCENEDIR)/, $(addsuffix .c,\
-			camera camera_info camera_ray_define \
+			camera_info \
 			light scene scene_create sphere sphere_calc \
 			cylinder cylinder_info cylinder_calc cylinder_uv \
 			disk disk_calc plane plane_calc add_body \
@@ -33,7 +33,7 @@ SRCSCENE := $(addprefix $(SCENEDIR)/, $(addsuffix .c,\
 RENDERDIR := rendering
 SRCRENDER :=	$(addprefix $(RENDERDIR)/, $(addsuffix .c,\
 				rendering image pixel ray_utils color drawing threads \
-				color2 light_shadow phong))
+				camera camera_ray_define color2 light_shadow phong))
 
 IODIR := io
 SRCIO :=	$(addprefix $(IODIR)/, $(addsuffix .c,\

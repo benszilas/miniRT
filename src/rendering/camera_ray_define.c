@@ -76,10 +76,9 @@ void	anti_aliasing_loop(t_scene *scene, uint x, uint y, t_pixel *pixel)
 {
 	uint		i;
 	t_vector	ray;
-	uint		color[ANTI_ALIASING_FACTOR];
+	uint		color[MAX_ANTI_ALIASING];
 
 	i = 0;
-
 	while (i < scene->anti_aliasing + 1)
 	{
 		ray = set_ray(aa_x(x, i), aa_y(y, i), scene, &scene->camera);

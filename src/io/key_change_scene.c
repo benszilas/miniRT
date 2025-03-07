@@ -12,10 +12,13 @@
 
 #include "../../minirt.h"
 
-uint	key_change_res_minus(t_scene *scene)
+uint	key_change_res_increase(t_scene *scene)
 {
 	if (scene->resolution_x == 1 && scene->resolution_y == 1)
-		return (scene->anti_aliasing = ANTI_ALIASING_FACTOR, 1);
+	{
+		scene->anti_aliasing = (scene->anti_aliasing == false) ? 4 : 9;
+		return (1);
+	}
 	if (scene->resolution_x == RESOLUTION_SCALE_X \
 	&& scene->resolution_y == RESOLUTION_SCALE_Y)
 		return (scene->resolution_x = 1, scene->resolution_y = 1, 1);
@@ -24,26 +27,34 @@ uint	key_change_res_minus(t_scene *scene)
 	return (1);
 }
 
+uint	key_change_res_decrease(t_scene *scene)
+{
+	if (scene->anti_aliasing)
+	{
+		(scene->anti_aliasing == 9) ? scene->anti_aliasing == 4
+		: (scene->anti_aliasing == 4) ? scene->anti_aliasing == false;
+		return (1);
+	}
+	if (scene->resolution_x == 1 && scene->resolution_y == 1)
+		return (scene->resolution_x = RESOLUTION_SCALE_X, \
+				scene->resolution_y = RESOLUTION_SCALE_Y, 1);
+	if (scene->resolution_x >= RESOLUTION_SCALE_X * \
+			SCENE_START_RESOLUTION_CAP || scene->resolution_y >= \
+			RESOLUTION_SCALE_Y * SCENE_START_RESOLUTION_CAP)
+		return (false);
+	scene->resolution_x *= 2;
+	scene->resolution_y *= 2;
+}
+
 uint	key_change_res(int keycode, t_scene *scene)
 {
 	if (keycode == XK_KP_Subtract)
-	{
-		if (scene->anti_aliasing)
-			return (scene->anti_aliasing = false, 1);
-		if (scene->resolution_x == 1 && scene->resolution_y == 1)
-			return (scene->resolution_x = RESOLUTION_SCALE_X, \
-					scene->resolution_y = RESOLUTION_SCALE_Y, 1);
-		if (scene->resolution_x >= RESOLUTION_SCALE_X * \
-				SCENE_START_RESOLUTION_CAP || scene->resolution_y >= \
-				RESOLUTION_SCALE_Y * SCENE_START_RESOLUTION_CAP)
-			return (false);
-		scene->resolution_x *= 2;
-		scene->resolution_y *= 2;
-	}
+		return (key_change_res_decrease(scene));
 	else if (keycode == XK_KP_Add)
-		key_change_res_minus(scene);
+		return (key_change_res_increase(scene));
 	else if (keycode == XK_Return)
-		return (scene->resolution_x = scene->resolution_y = 1, 1);
+		return (scene->resolution_x = scene->resolution_y = 1, \
+				scene->anti_aliasing = false, 1);
 	else if (keycode == XK_BackSpace)
 		return (scene->camera.position = (t_vector){0, 0, 0}, \
 				scene->camera.fov = 1, 1);
