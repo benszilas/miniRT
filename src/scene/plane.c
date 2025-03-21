@@ -66,7 +66,7 @@ bool	parse_plane(char *entry, uint line_count, \
 	return (true);
 }
 
-void	plane_save(t_plane plane, uint color, int fd)
+void	plane_save(t_plane plane, t_color color, int fd)
 {
 	ft_fprintf(fd, "pl %f,%f,%f %f,%f,%f", \
 			plane.point.x, plane.point.y, plane.point.z, \

@@ -12,7 +12,7 @@
 
 #include "../../minirt.h"
 
-void	rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color)
+void	rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint rgb_color)
 {
 	uint	x;
 	uint	y;
@@ -23,7 +23,7 @@ void	rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color)
 		x = 0;
 		while (x < rect.width && rect.x + x < WI)
 		{
-			*(int *)pixel[(rect.y + y) * WI + (rect.x + x)].color = color;
+			*(int *)pixel[(rect.y + y) * WI + (rect.x + x)].color = rgb_color;
 			pixel[(rect.y + y) * WI + (rect.x + x)].id = id;
 			x++;
 		}
@@ -31,7 +31,7 @@ void	rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color)
 	}
 }
 
-void	rt_draw_rect_blend(t_rect rect, t_pixel *pixel, uint id, uint color)
+void	rt_draw_rect_blend(t_rect rect, t_pixel *pixel, uint id, t_color color)
 {
 	uint	x;
 	uint	y;
@@ -42,10 +42,10 @@ void	rt_draw_rect_blend(t_rect rect, t_pixel *pixel, uint id, uint color)
 		x = 0;
 		while (x < rect.width && rect.x + x < WI)
 		{
-			*(int *)pixel[(rect.y + y) * WI + (rect.x + x)].color = \
-					color_blend(*(int *)pixel[(rect.y + y) \
-							* WI + (rect.x + x)].color, color);
-			pixel[(rect.y + y) * WI + (rect.x + x)].id = id;
+			uint coord = (rect.y + y) * WI + (rect.x + x);
+			uint* colorptr = pixel[coord].color;
+			*colorptr = float_to_rgb(color_blend(set_color(colorptr->r, colorptr->g, colorptr->b), color));
+			pixel[coord].id = id;
 			x++;
 		}
 		y++;

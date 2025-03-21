@@ -88,9 +88,9 @@ bool	parse_ambient(char *entry_light, uint line_count, \
 		|| *was_parsed == true)
 		return (err("ambient", line_count), false);
 	*light = (t_light){.position = set_vector(0, 0, 0), \
-		.intensity = ft_atod(params[0]),
+		.intensity = 1,	//intensitiy is not used for ambient but is calculated into the base color below
 		.color = get_color(parse_body_color(params + 1, &error), \
-		0xFFFFFFFF, ft_atod(params[0]))};
+		(t_color){.r = 255, .g = 255, .b = 255}, ft_atod(params[0]))};
 	if (error || light->intensity < 0 || light->intensity > 1.0)
 		return (err("ambient", line_count), false);
 	return (*was_parsed = true);

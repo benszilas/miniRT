@@ -37,7 +37,7 @@ void	print_disk(t_body *body)
 			disk.normal.z, disk.radius, body->color, body->id);
 }
 
-void	disk_save(t_disk disk, uint color, int fd)
+void	disk_save(t_disk disk, t_color color, int fd)
 {
 	ft_fprintf(fd, "di %f,%f,%f %f,%f,%f %f", \
 		disk.point.x, disk.point.y, disk.point.z, \

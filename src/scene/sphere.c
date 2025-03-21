@@ -22,7 +22,7 @@ void	body_sphere_print(t_body *body)
 			sphere.radius, body->color, body->id);
 }
 
-void	sphere_save(t_sphere sphere, uint color, int fd)
+void	sphere_save(t_sphere sphere, t_color color, int fd)
 {
 	ft_fprintf(fd, "sp %f,%f,%f %f", \
 			sphere.center.x, sphere.center.y, sphere.center.z, \

@@ -207,6 +207,13 @@ typedef struct s_param
 
 # define ITEM_TITLE_LEN 128
 
+typedef struct s_color
+{
+	float	r;
+	float	g;
+	float	b;
+}	t_color;
+
 typedef struct s_item
 {
 	uint		id;
@@ -372,7 +379,7 @@ typedef struct s_body
 {
 	uint			id;
 	t_type			type;
-	uint			color;
+	t_color			color;
 	bool			reflect;
 	bool			checker_board;
 	bool			textured;
@@ -397,7 +404,7 @@ typedef struct s_light
 	float		phong;
 	float		obj_distance;
 	float		intensity;
-	uint		color;
+	t_color		color;
 }	t_light;
 
 typedef double	t_matrix4[4][4];
@@ -433,7 +440,7 @@ typedef struct s_scene
 	uint			light_focus;
 	uint			depth;
 	bool			sky_sphere;
-	uint			sky_color;
+	t_color			sky_color;
 	t_body			*body_focus;
 	t_pixel			*pixel;
 	t_body			*body;
@@ -493,9 +500,9 @@ void		data_destroy_func(void *data_ptr);
 long		get_current_us(struct timeval start);
 
 /* Drawing */
-void		rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, uint color);
+void		rt_draw_rect(t_rect rect, t_pixel *pixel, uint id, t_color color);
 void		rt_draw_rect_blend(t_rect rect, t_pixel *pixel, \
-								uint id, uint color);
+								uint id, t_color color);
 
 # define COLLECT_MODE_NORMAL 0
 # define COLLECT_MODE_END 1
@@ -514,7 +521,9 @@ bool		check_line(char *tmp);
 void		swap_2_ints(uint *a, uint *b);
 
 /* Colors */
-uint		set_color(uint r, uint g, uint b);
+uint		float_to_rgb(t_color *color);
+t_color		set_color(uint r, uint g, uint b);
+void		rgb_float_to_uint(t_color color, uint *pixel);
 void		get_color_reflect(t_vector new_center, t_vector normal, \
 								t_scene *scene, t_pixel *pixel);
 /* Returns diffuse color when called with parameters
@@ -524,17 +533,17 @@ uint obj = object color and float gloss = 1.
 Returns specular reflection color when called with parameters
 attn = dot product of light ray reflection and view ray
 obj = 0xFFFFFF and float gloss greater than 1 */
-uint		phong_reflection(uint obj, float attn, t_light l, float gloss);
+t_color		phong_reflection(t_color obj, float attn, t_light l, float gloss);
 void		apply_shadow_bias(t_vector *p, t_vector normal, double scale);
-uint		get_color(uint obj, uint light, double attn);
-uint		color_blend(uint	color1, uint color2);
+t_color	get_color(t_color obj, t_color light, double attn);
+t_color	color_blend(t_color color1, t_color color2);
 /* !!! This function PRINTS a SPACE at the BEGINNING and a NEWLINE
 character at the END !!! */
-void		color_print(uint color, int fd);
-uint		add_color(uint color1, uint color2);
-uint		parse_body_color(char *params[], int *error);
+void		color_print(t_color color, int fd);
+t_color		add_color(t_color color1, t_color color2);
+t_color		parse_body_color(char *params[], int *error);
 void		get_background_color(t_scene *sc, t_pixel *px, t_vector v);
-uint		color_brightness(uint original, float brightness);
+t_color		color_brightness(t_color original, float brightness);
 /* Function to calculate the Euclidean distance between two colors */
 float		color_distance(uint r1, uint g1, uint b1, uint r2, uint g2, uint b2);
 
@@ -544,7 +553,7 @@ bool		parse_sphere(char *entry, uint line_count, \
 void		pixel_sphere_set(t_pixel *pixel, t_vector camera_ray, \
 								t_body *body, t_scene *scene);
 void		body_sphere_print(t_body *body);
-void		sphere_save(t_sphere sphere, uint color, int fd);
+void		sphere_save(t_sphere sphere, t_color color, int fd);
 double		sphere_hit_distance(t_vector ray, t_vector dlt_centr, \
 								t_sphere sphere, int *invert);
 void		get_color_sphere(	t_body *body, \
@@ -556,7 +565,7 @@ bool		parse_plane(char *entry, uint line_count, \
 void		body_plane_print(t_body *body);
 void		trace_plane(t_pixel *pixel, t_vector camera_ray, \
 							t_body *body, t_scene *scene);
-void		plane_save(t_plane plane, uint color, int fd);
+void		plane_save(t_plane plane, t_color color, int fd);
 bool		move_plane(int keycode, t_plane *plane);
 double		plane_hit_distance(t_plane pl, t_vector cam, \
 								t_vector camera_ray, int *invert);
@@ -564,7 +573,7 @@ void		get_color_plane(t_body *body, t_hit_point *hit, t_pixel *pixel);
 
 /* Cylinder */
 void		body_cylinder_print(t_body *body);
-void		cylinder_save(t_cylinder cylinder, uint color, int fd);
+void		cylinder_save(t_cylinder cylinder, t_color color, int fd);
 bool		parse_cylinder(char *entry, uint line_count, \
 							t_body *body, uint body_count);
 void		calc_cyl_data(t_cylinder *cy);
@@ -593,7 +602,7 @@ double		disk_hit_distance(t_disk disk, t_vector ray, \
 						t_vector cam, int *invert);
 void		print_disk(t_body *body);
 bool		move_disk(int keycode, t_disk *disk);
-void		disk_save(t_disk disk, uint color, int fd);
+void		disk_save(t_disk disk, t_color color, int fd);
 void		get_color_disk(t_body *body, t_vector intersect, t_pixel *pixel);
 
 /* Cone */
@@ -614,7 +623,7 @@ t_scene *sc);
 void		trace_cone_bottom(t_pixel *px, t_vector ray, t_body *cone, \
 t_scene *sc);
 double		cone_components_shadow(t_cone cn, t_vector ray, t_vector p);
-void		cone_save(t_cone cone, uint color, int fd);
+void		cone_save(t_cone cone, t_color color, int fd);
 t_vector	cone_surface_normal(t_cone cn, t_vector p, int invert);
 bool		finite_cone_hit(double cone_height, double h);
 
@@ -828,10 +837,10 @@ void		container_item_desc_sort(t_container *cont);
 bool		ft_opendir(DIR **dir, char *path);
 
 /* Phong */
-uint		phong_reflection(uint obj, float attenuation, \
+t_color		phong_reflection(t_color obj, float attenuation, \
 								t_light l, float gloss);
 void		calc_phong_vectors(t_hit_point *hit, t_light *l);
-uint		diffuse_reflection(t_pixel *px, t_hit_point hit, t_light l);
-uint		specular_reflection(t_pixel *px, t_hit_point hit, t_light l);
+t_color		diffuse_reflection(t_pixel *px, t_hit_point hit, t_light l);
+t_color		specular_reflection(t_pixel *px, t_hit_point hit, t_light l);
 float		dropoff_factor(float distance);
 #endif

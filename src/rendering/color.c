@@ -12,82 +12,52 @@
 
 #include "../../minirt.h"
 
-uint	get_color(uint obj, uint light, double attn)
+t_color	get_color(t_color obj, t_color light, double attn)
 {
-	int32_t	r;
-	int32_t	g;
-	int32_t	b;
-
-	r = (double)((light >> 16 & 0xFF) * (obj >> 16 & 0xFF)) / 255 * attn;
-	if (r > 255)
-		r = 255;
-	g = (double)((light >> 8 & 0xFF) * (obj >> 8 & 0xFF)) / 255 * attn;
-	if (g > 255)
-		g = 255;
-	b = (double)((light & 0xFF) * (obj & 0xFF)) / 255 * attn;
-	if (b > 255)
-		b = 255;
-	return (set_color(r, g, b));
+	return ((t_color){light.r * obj.r * attn, light.g * obj.g * attn, light.b * obj.b * attn});
 }
 
-uint	color_blend(uint color1, uint color2)
+u_int	color_blend(t_color color1, t_color color2)
 {
-	int	r;
-	int	g;
-	int	b;
+	float	r;
+	float	g;
+	float	b;
 
-	r = ((color1 >> 16) & 0xff) - ((color2 >> 16) & 0xff);
+	r = color1.r - color2.r;
 	if (r < 0)
 		r = 0;
-	else if (r > 255)
-		r = 255;
-	g = ((color1 >> 8) & 0xff) - ((color2 >> 8) & 0xff);
+	g = color1.g - color2.g;
 	if (g < 0)
 		g = 0;
-	else if (g > 255)
-		g = 255;
-	b = ((color1) & 0xff) - ((color2) & 0xff);
+	b = color1.b  color2.b;
 	if (b < 0)
 		b = 0;
-	else if (b > 255)
-		b = 255;
-	return (set_color(r, g, b));
+	return ((t_color){r, g, b});
 }
 
-uint	add_color(uint color1, uint color2)
+t_color	add_color(t_color color1, t_color color2)
 {
-	uint	r;
-	uint	g;
-	uint	b;
+	float	r;
+	float	g;
+	float	b;
 
-	r = ((color1 >> 16) & 0xff) + ((color2 >> 16) & 0xff);
-	if (r > 255)
-		r = 255;
-	g = ((color1 >> 8) & 0xff) + ((color2 >> 8) & 0xff);
-	if (g > 255)
-		g = 255;
-	b = ((color1) & 0xff) + ((color2) & 0xff);
-	if (b > 255)
-		b = 255;
-	return (set_color(r, g, b));
+	r = color1.r + color2.r;
+	if (r > 1)
+		r = 1;
+	g = color1.g + color2.g;
+	if (g > 1)
+		g = 1;
+	b = color1.b + color2.b;
+	if (b > 1)
+		b = 1;
+	return ((t_color){r, g, b});
 }
 
-uint	color_brightness(uint original, float brightness)
+t_color	color_brightness(t_color original, float brightness)
 {
-	uint	r;
-	uint	g;
-	uint	b;
-
-	r = ((original >> 16) & 0xff) * brightness;
-	if (r > 255)
-		r = 255;
-	g = ((original >> 8) & 0xff) * brightness;
-	if (g > 255)
-		g = 255;
-	b = ((original) & 0xff) * brightness;
-	if (b > 255)
-		b = 255;
-	return (set_color(r, g, b));
+	if (brightness > 1)
+		brightness == 1;
+	return ((t_color){original.r * brightness, original.g * brightness, original.b * brightness});
 }
 
 float color_distance(uint r1, uint g1, uint b1, uint r2, uint g2, uint b2)

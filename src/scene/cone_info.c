@@ -12,7 +12,7 @@
 
 #include "../../minirt.h"
 
-void	cone_save(t_cone cone, uint color, int fd)
+void	cone_save(t_cone cone, t_color color, int fd)
 {
 	ft_fprintf(fd, "cn %f,%f,%f %f,%f,%f %f %f", \
 		cone.vertex.x, cone.vertex.y, cone.vertex.z, \

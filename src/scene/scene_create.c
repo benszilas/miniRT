@@ -134,7 +134,7 @@ void	scene_create(const char *filepath, t_scene *scene)
 	ppm_image_read(TEXTURE_PATH, &scene->texture[0]);
 	scene->texture_count = 1;
 	ppm_image_read(SKYBOX_PATH, &scene->sky);
-	scene->sky_color = SKY_COLOR;
+	scene->sky_color = set_color(SKY_COLOR >> 16 & 0xff, SKY_COLOR >> 8 & 0xff, SKY_COLOR & 0xff);
 	bump_map_read(BUMP_MAP_PATH, &scene->bump_map[0]);
 	scene->bump_map_count = 1;
 	scene->body = ft_calloc(MAX_BODY_INIT + 1, sizeof(*scene->body));

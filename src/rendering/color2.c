@@ -12,15 +12,14 @@
 
 #include "../../minirt.h"
 
-uint	set_color(uint r, uint g, uint b)
+t_color	set_color(uint r, uint g, uint b)
 {
-	return (r << 16 | g << 8 | b);
+	return (t_color){.r = r, .g = g, .b = b};
 }
 
-void	color_print(uint color, int fd)
+void	color_print(t_color color, int fd)
 {
-	ft_fprintf(fd, " %u,%u,%u\n", (color >> 16) & 0xff, \
-			(color >> 8) & 0xff, color & 0xff);
+	ft_fprintf(fd, " %u,%u,%u\n", color.r, color.g, color.b);
 }
 
 uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
@@ -40,9 +39,21 @@ uint	mix_colors(uint base_color, uint reflected_color, double reflectivity)
 	return (final_color);
 }
 
-uint	parse_body_color(char *params[], int *error)
+t_color	parse_body_color(char *params[], int *error)
 {
 	return (set_color(set_signed_int(params[0], 0, UCHAR_MAX, error), \
 				set_signed_int(params[1], 0, UCHAR_MAX, error), \
 				set_signed_int(params[2], 0, UCHAR_MAX, error)));
+}
+
+uint	float_to_rgb(t_color *color)
+{
+	uint r;
+	uint g;
+	uint b;
+
+	r = (uint)(color->r * 255);
+	g = (uint)(color->g * 255);
+	b = (uint)(color->b * 255);
+	return (r << 16 | g << 8 | b);
 }

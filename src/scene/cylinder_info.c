@@ -61,7 +61,7 @@ void	body_cylinder_print(t_body *body)
 			cylinder.bottom.x, cylinder.bottom.y, cylinder.bottom.z);
 }
 
-void	cylinder_save(t_cylinder cylinder, uint color, int fd)
+void	cylinder_save(t_cylinder cylinder, t_color color, int fd)
 {
 	ft_fprintf(fd, "cy %f,%f,%f %f,%f,%f %f %f", \
 			cylinder.center.x, cylinder.center.y, cylinder.center.z, \
