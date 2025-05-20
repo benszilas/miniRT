@@ -45,10 +45,8 @@ bool	collect_param_comma(char **entry_position, char *params[], \
 bool	collect_param_single(char **entry_position, char *params[], int mode)
 {
 	char	*tmp;
-	bool	period;
 
 	tmp = *entry_position;
-	period = false;
 	while (*tmp && ft_isspace(*tmp))
 		tmp++;
 	if (!check_position(&tmp))

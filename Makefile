@@ -12,7 +12,7 @@
 
 CC := cc
 
-CFLAGS := -Wall -Werror -Wextra
+CFLAGS := -Wall -Wextra
 
 LDFLAGS := -lm -lXext -lX11
 

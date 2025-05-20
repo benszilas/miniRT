@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "../minirt.h"
-#include <mlx.h>
 
 void	data_destroy_func(void *data_ptr)
 {
